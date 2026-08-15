@@ -60,7 +60,7 @@ export const Dashboard: React.FC = () => {
       {/* Sidebar / Top Header */}
       <div className="w-full md:w-[250px] bg-white dark:bg-[#131926] border-b md:border-b-0 md:border-r border-gray-200 dark:border-[#1E293B] p-5 flex flex-col md:h-screen sticky top-0 z-10 shadow-sm md:shadow-none">
         <div className="flex-1">
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-6">SyncHQ</h1>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-6">TeamPulse</h1>
           
           <button 
             onClick={() => setIsModalOpen(true)}

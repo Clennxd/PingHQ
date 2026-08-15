@@ -22,7 +22,7 @@ export const Login: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      const email = `${userId}@synchq.local`;
+      const email = `${userId}@teampulse.local`;
       
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
@@ -46,7 +46,7 @@ export const Login: React.FC = () => {
     <div className="flex items-center justify-center min-h-screen bg-backgroundLight dark:bg-backgroundDark px-4">
       <div className="w-full max-w-md bg-white dark:bg-[#131926] border border-[#E2E8F0] dark:border-[#1E293B] rounded-xl shadow-lg p-8">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">SyncHQ</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">TeamPulse</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-2">Sign in to your account</p>
         </div>
 
