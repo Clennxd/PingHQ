@@ -3,12 +3,14 @@ import { useAuthStore } from '../store/authStore';
 import { useMemoStore } from '../store/memoStore';
 import { MemoCard } from '../components/MemoCard';
 import { CreateMemoModal } from '../components/CreateMemoModal';
-import { LogOut, Building, Users, Info, Megaphone } from 'lucide-react';
+import { LogOut, Building, Users, Info, Megaphone, Settings } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export const Dashboard: React.FC = () => {
   const { profile, logout, isLoading: isProfileLoading } = useAuthStore();
   const { memos, isLoading: isMemoLoading, error, fetchMemos, subscribeToMemos, unsubscribeMemos } = useMemoStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (profile) {
@@ -69,6 +71,11 @@ export const Dashboard: React.FC = () => {
             
             {/* Mobile only profile/logout */}
             <div className="flex md:hidden items-center space-x-3">
+              {profile.role === 'ADMIN' && (
+                <button onClick={() => navigate('/admin')} className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">
+                  <Settings className="w-5 h-5" />
+                </button>
+              )}
               <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-sm">
                 {userName.charAt(0)}
               </div>
@@ -80,6 +87,15 @@ export const Dashboard: React.FC = () => {
 
           {/* Desktop only Organization / Department info & Create Button */}
           <div className="hidden md:block">
+            {profile.role === 'ADMIN' && (
+              <button 
+                onClick={() => navigate('/admin')}
+                className="w-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold py-2.5 px-4 rounded-lg shadow-sm transition-colors flex items-center justify-center mb-3"
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Admin Panel
+              </button>
+            )}
             <button 
               onClick={() => setIsModalOpen(true)}
               className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2.5 px-4 rounded-lg shadow-sm transition-colors flex items-center justify-center mb-8"

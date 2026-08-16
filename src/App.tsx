@@ -3,7 +3,9 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
+import { Join } from './pages/Join';
 import { Dashboard } from './pages/Dashboard';
+import { AdminPanel } from './pages/AdminPanel';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Toaster } from 'sonner';
 
@@ -28,10 +30,17 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/join" element={<Join />} />
         
         <Route path="/dashboard" element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/admin" element={
+          <ProtectedRoute>
+            <AdminPanel />
           </ProtectedRoute>
         } />
 

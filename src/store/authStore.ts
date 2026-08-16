@@ -19,6 +19,7 @@ interface AuthState {
   checkSession: () => Promise<void>;
   logout: () => Promise<void>;
   register: (companyName: string, fullName: string, username: string, password: string) => Promise<void>;
+  joinCompany: (inviteCode: string, fullName: string, username: string, password: string) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -111,6 +112,55 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (error: any) {
       console.error("REGISTER GAGAL:", error);
       alert("ERROR REGISTER: " + error.message); // PAKSA MUNCUL POP-UP
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  joinCompany: async (inviteCode, fullName, username, password) => {
+    set({ isLoading: true });
+    try {
+      console.log("1. Memulai Join Company...");
+      const { data: company, error: companyError } = await supabase
+        .from('companies')
+        .select('id')
+        .eq('invite_code', inviteCode.toUpperCase())
+        .single();
+        
+      if (companyError || !company) throw new Error("Kode Undangan tidak valid!");
+      
+      const { data: dept } = await supabase
+        .from('departments')
+        .select('id')
+        .eq('company_id', company.id)
+        .limit(1)
+        .single();
+        
+      const safeUsername = username.toLowerCase().replace(/\s+/g, '');
+      const email = safeUsername + '@pinghq.local';
+      
+      const { data: authData, error: authError } = await supabase.auth.signUp({ email, password });
+      if (authError) throw new Error("Auth Error: " + authError.message);
+      if (!authData.user) throw new Error("User tidak berhasil dibuat oleh Supabase.");
+      
+      console.log("2. SignUp Sukses. ID:", authData.user.id);
+      
+      const { error: profileError } = await supabase.from('profiles').insert({
+        id: authData.user.id,
+        user_id_login: safeUsername,
+        company_id: company.id,
+        department_id: dept?.id || null,
+        full_name: fullName,
+        role: 'MEMBER'
+      });
+      if (profileError) throw new Error("Profile Error: " + profileError.message);
+      
+      console.log("3. Semua Insert Sukses!");
+      await get().checkSession();
+    } catch (error: any) {
+      console.error("JOIN GAGAL:", error);
+      alert("ERROR JOIN: " + error.message);
       throw error;
     } finally {
       set({ isLoading: false });
