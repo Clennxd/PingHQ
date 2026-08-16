@@ -22,6 +22,8 @@ interface MemoState {
   subscribeToMemos: (companyId: string, departmentId: string | null) => void;
   unsubscribeMemos: () => void;
   createMemo: (payload: { company_id: string, department_id: string | null, sender_id: string, message: string, type: string }) => Promise<{ success: boolean; error?: string }>;
+  markMemoAsRead: (memoId: string, userId: string) => Promise<void>;
+  getMemoReaders: (memoId: string) => Promise<any[]>;
 }
 
 export const useMemoStore = create<MemoState>((set, get) => ({
@@ -38,6 +40,34 @@ export const useMemoStore = create<MemoState>((set, get) => ({
     } catch (error: any) {
       console.error('Error creating memo:', error);
       return { success: false, error: error.message };
+    }
+  },
+
+  markMemoAsRead: async (memoId, userId) => {
+    try {
+      const { error } = await supabase.from('memo_reads').upsert(
+        { memo_id: memoId, user_id: userId },
+        { onConflict: 'memo_id,user_id' }
+      );
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error marking memo as read:', error);
+    }
+  },
+
+  getMemoReaders: async (memoId) => {
+    try {
+      const { data, error } = await supabase
+        .from('memo_reads')
+        .select('read_at, profiles(full_name)')
+        .eq('memo_id', memoId)
+        .order('read_at', { ascending: false });
+        
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching memo readers:', error);
+      return [];
     }
   },
 
