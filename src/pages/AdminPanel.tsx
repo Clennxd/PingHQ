@@ -4,6 +4,7 @@ import { useAuthStore } from '../store/authStore';
 import { supabase } from '../lib/supabase';
 import { Building2, Users, ArrowLeft, Plus } from 'lucide-react';
 import { toast } from 'sonner';
+import { CustomDropdown } from '../components/CustomDropdown';
 
 export const AdminPanel: React.FC = () => {
   const { profile, checkSession } = useAuthStore();
@@ -16,6 +17,7 @@ export const AdminPanel: React.FC = () => {
   
   const [newDeptName, setNewDeptName] = useState('');
   const [isAddingDept, setIsAddingDept] = useState(false);
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!profile) return;
@@ -94,6 +96,7 @@ export const AdminPanel: React.FC = () => {
   };
 
   const updateEmployeeDepartment = async (userId: string, newDeptId: string) => {
+    setUpdatingUserId(userId);
     try {
       const { error } = await supabase
         .from('profiles')
@@ -123,6 +126,8 @@ export const AdminPanel: React.FC = () => {
       }
     } catch (error: any) {
       toast.error('Gagal mengubah departemen: ' + error.message);
+    } finally {
+      setUpdatingUserId(null);
     }
   };
 
@@ -217,23 +222,20 @@ export const AdminPanel: React.FC = () => {
             <div className="flex-1 overflow-y-auto min-h-[200px] max-h-[300px] border border-slate-200 dark:border-slate-700 rounded-lg">
               <ul className="divide-y divide-slate-200 dark:divide-slate-700">
                 {employees.map(emp => (
-                  <li key={emp.id} className="p-3 flex justify-between items-center gap-2">
+                  <li key={emp.id} className="p-3 flex justify-between items-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{emp.full_name}</p>
                       <p className="text-xs text-slate-500 mt-0.5 truncate">ID: {emp.user_id_login}</p>
                     </div>
                     <div className="flex items-center space-x-2 shrink-0">
-                      <select 
-                        value={emp.department_id || ''} 
-                        onChange={(e) => updateEmployeeDepartment(emp.id, e.target.value)}
-                        className="bg-transparent border border-slate-300 dark:border-slate-600 rounded px-2 py-1 text-xs text-slate-700 dark:text-slate-300 dark:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 max-w-[120px] md:max-w-[150px] truncate"
-                      >
-                        <option value="" disabled>Pilih Dept</option>
-                        {departments.map(dept => (
-                          <option key={dept.id} value={dept.id}>{dept.name}</option>
-                        ))}
-                      </select>
-                      <span className={`text-xs font-semibold px-2 py-1 rounded-full whitespace-nowrap ${emp.role === 'ADMIN' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'}`}>
+                      <CustomDropdown
+                        options={departments.map(d => ({ id: d.id, name: d.name }))}
+                        value={emp.department_id || ''}
+                        onChange={(newDeptId) => updateEmployeeDepartment(emp.id, newDeptId)}
+                        isLoading={updatingUserId === emp.id}
+                        placeholder="Pilih Dept"
+                      />
+                      <span className={`text-xs font-semibold px-2 py-1.5 rounded-md whitespace-nowrap ${emp.role === 'ADMIN' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'}`}>
                         {emp.role}
                       </span>
                     </div>
