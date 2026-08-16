@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useNavigate, Navigate, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/authStore';
 
@@ -95,6 +95,15 @@ export const Login: React.FC = () => {
             {isSubmitting ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
+
+        <div className="mt-6 text-center">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Belum punya akun perusahaan?{' '}
+            <Link to="/register" className="text-primary hover:text-[#2563EB] font-medium transition-colors">
+              Daftar di sini
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );
