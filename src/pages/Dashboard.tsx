@@ -62,7 +62,7 @@ export const Dashboard: React.FC = () => {
         <div className="flex-1 p-4 md:p-5 flex flex-col">
           <div className="flex items-center justify-between mb-0 md:mb-6">
             <div>
-              <h1 className="text-xl font-bold text-slate-900 dark:text-white">TeamPulse</h1>
+              <h1 className="text-xl font-bold text-slate-900 dark:text-white">PingHQ</h1>
               {/* Mobile only department sub-header */}
               <p className="md:hidden text-xs text-slate-500 mt-0.5">{departmentName}</p>
             </div>

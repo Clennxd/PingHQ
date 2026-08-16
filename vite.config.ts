@@ -9,8 +9,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
-        name: 'TeamPulse',
-        short_name: 'TeamPulse',
+        name: 'PingHQ',
+        short_name: 'PingHQ',
         description: 'Realtime Team Broadcast & Memo Hub',
         theme_color: '#090D16',
         background_color: '#F8FAFC',
