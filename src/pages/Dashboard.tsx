@@ -3,7 +3,7 @@ import { useAuthStore } from '../store/authStore';
 import { useMemoStore } from '../store/memoStore';
 import { MemoCard } from '../components/MemoCard';
 import { CreateMemoModal } from '../components/CreateMemoModal';
-import { LogOut, Building, Users, Info, Megaphone, Settings } from 'lucide-react';
+import { LogOut, Building, Users, Info, Megaphone, Settings, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const Dashboard: React.FC = () => {
@@ -76,9 +76,9 @@ export const Dashboard: React.FC = () => {
                   <Settings className="w-5 h-5" />
                 </button>
               )}
-              <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-sm">
-                {userName.charAt(0)}
-              </div>
+              <button onClick={() => navigate('/profile')} className="text-slate-400 hover:text-blue-500">
+                <User className="w-5 h-5" />
+              </button>
               <button onClick={() => logout()} className="text-slate-400 hover:text-red-500">
                 <LogOut className="w-5 h-5" />
               </button>
@@ -135,13 +135,22 @@ export const Dashboard: React.FC = () => {
               <p className="text-xs text-slate-500 truncate">{profile.role || 'Member'}</p>
             </div>
           </div>
-          <button 
-            onClick={() => logout()}
-            className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
-            title="Logout"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
+          <div className="flex space-x-1 shrink-0">
+            <button 
+              onClick={() => navigate('/profile')}
+              className="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors"
+              title="Profil Saya"
+            >
+              <User className="w-4 h-4" />
+            </button>
+            <button 
+              onClick={() => logout()}
+              className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
+              title="Logout"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
 

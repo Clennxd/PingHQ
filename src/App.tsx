@@ -6,6 +6,7 @@ import { Register } from './pages/Register';
 import { Join } from './pages/Join';
 import { Dashboard } from './pages/Dashboard';
 import { AdminPanel } from './pages/AdminPanel';
+import { Profile } from './pages/Profile';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Toaster } from 'sonner';
 
@@ -41,6 +42,12 @@ function App() {
         <Route path="/admin" element={
           <ProtectedRoute>
             <AdminPanel />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <Profile />
           </ProtectedRoute>
         } />
 

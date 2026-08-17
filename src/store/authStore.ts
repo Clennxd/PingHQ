@@ -22,6 +22,9 @@ interface AuthState {
   logout: () => Promise<void>;
   register: (companyName: string, fullName: string, username: string, password: string) => Promise<void>;
   joinCompany: (inviteCode: string, fullName: string, username: string, password: string) => Promise<void>;
+  updateProfileName: (newName: string) => Promise<void>;
+  updatePassword: (newPassword: string) => Promise<void>;
+  verifyOldPassword: (oldPassword: string) => Promise<boolean>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -169,5 +172,42 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } finally {
       set({ isLoading: false });
     }
+  },
+
+  updateProfileName: async (newName: string) => {
+    const session = get().session;
+    if (!session) throw new Error("No active session");
+    
+    const { error } = await supabase
+      .from('profiles')
+      .update({ full_name: newName })
+      .eq('id', session.user.id);
+      
+    if (error) throw error;
+    await get().checkSession();
+  },
+
+  updatePassword: async (newPassword: string) => {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) throw error;
+  },
+
+  verifyOldPassword: async (oldPassword: string) => {
+    const session = get().session;
+    if (!session || !session.user.email) throw new Error("Sesi tidak valid");
+    
+    // Coba login ulang diam-diam untuk verifikasi password lama
+    const { error } = await supabase.auth.signInWithPassword({
+      email: session.user.email,
+      password: oldPassword
+    });
+    
+    if (error) {
+      if (error.message.includes('Invalid login credentials')) {
+        throw new Error("Password lama salah.");
+      }
+      throw error;
+    }
+    return true;
   }
 }));
