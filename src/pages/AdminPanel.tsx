@@ -147,25 +147,25 @@ export const AdminPanel: React.FC = () => {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-4 md:p-8 overflow-x-hidden">
       <div className="w-full max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Admin Panel</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">Admin Panel</h1>
           <button
             onClick={() => navigate('/dashboard')}
-            className="flex items-center text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-500 transition-colors"
+            className="flex items-center gap-2 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
           >
-            <ArrowLeft className="w-4 h-4 mr-1" />
-            Kembali ke Dashboard
+            <ArrowLeft className="w-5 h-5 md:w-6 md:h-6" />
+            <span className="hidden md:inline font-medium">Kembali</span>
           </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
           {/* Section 1: Invite Code */}
-          <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm col-span-1 md:col-span-2 w-full">
+          <div className="bg-white dark:bg-slate-800 p-4 md:p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm col-span-1 md:col-span-2 w-full">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center mb-4">
               <Building2 className="w-5 h-5 mr-2 text-blue-500" />
               Kode Undangan Perusahaan
             </h2>
             <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800 flex flex-col items-center justify-center">
-              <span className="text-3xl font-mono font-bold text-blue-600 dark:text-blue-400 tracking-wider break-all text-center">
+              <span className="text-3xl md:text-5xl font-mono font-bold text-blue-600 dark:text-blue-400 tracking-widest break-all text-center">
                 {company?.invite_code || 'TIDAK TERSEDIA'}
               </span>
               <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 text-center break-words">
@@ -175,7 +175,7 @@ export const AdminPanel: React.FC = () => {
           </div>
 
           {/* Section 2: Departments */}
-          <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col h-full w-full">
+          <div className="bg-white dark:bg-slate-800 p-4 md:p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col h-full w-full">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center mb-4">
               <Building2 className="w-5 h-5 mr-2 text-green-500" />
               Departemen
@@ -214,7 +214,7 @@ export const AdminPanel: React.FC = () => {
           </div>
 
           {/* Section 3: Employees */}
-          <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col h-full w-full">
+          <div className="bg-white dark:bg-slate-800 p-4 md:p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col h-full w-full">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center mb-4">
               <Users className="w-5 h-5 mr-2 text-purple-500" />
               Daftar Karyawan

@@ -60,13 +60,13 @@ export const Dashboard: React.FC = () => {
   return (
     <div className="flex flex-col md:flex-row h-screen w-full bg-slate-50 dark:bg-slate-900 overflow-hidden">
       {/* Sidebar (Desktop) / Header (Mobile) */}
-      <div className="w-full md:w-72 bg-white dark:bg-slate-800 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-700 flex-none z-10 flex flex-col">
-        <div className="flex-1 p-4 md:p-5 flex flex-col">
+      <div className="w-full h-16 md:h-auto md:w-72 bg-white dark:bg-slate-800 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-700 flex-none z-10 flex flex-col">
+        <div className="flex-1 flex flex-col px-4 py-3 md:p-5 justify-center md:justify-start">
           <div className="flex items-center justify-between mb-0 md:mb-6">
             <div>
-              <h1 className="text-xl font-bold text-slate-900 dark:text-white">PingHQ</h1>
+              <h1 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white leading-tight">{companyName}</h1>
               {/* Mobile only department sub-header */}
-              <p className="md:hidden text-xs text-slate-500 mt-0.5">{departmentName}</p>
+              <p className="md:hidden text-xs md:text-sm text-slate-500 leading-tight">{departmentName}</p>
             </div>
             
             {/* Mobile only profile/logout */}
