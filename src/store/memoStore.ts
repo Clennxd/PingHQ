@@ -74,19 +74,12 @@ export const useMemoStore = create<MemoState>((set, get) => ({
   fetchMemos: async (companyId, departmentId) => {
     set({ isLoading: true, error: null });
     try {
-      let query = supabase
+      const { data, error } = await supabase
         .from('memos')
         .select('*, profiles(full_name)')
         .eq('company_id', companyId)
+        .or(`department_id.is.null,department_id.eq.${departmentId}`)
         .order('created_at', { ascending: false });
-
-      if (departmentId) {
-        query = query.or(`department_id.eq.${departmentId},department_id.is.null`);
-      } else {
-        query = query.is('department_id', null);
-      }
-
-      const { data, error } = await query;
 
       if (error) throw error;
       
