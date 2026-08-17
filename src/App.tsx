@@ -10,13 +10,13 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { Toaster } from 'sonner';
 
 function App() {
-  const { checkSession, isLoading } = useAuthStore();
+  const { session, checkSession, isLoading } = useAuthStore();
 
   useEffect(() => {
     checkSession();
   }, [checkSession]);
 
-  if (isLoading) {
+  if (isLoading && !session) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-backgroundLight dark:bg-backgroundDark">
         <p className="text-gray-600 dark:text-gray-300">Initializing System...</p>

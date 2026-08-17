@@ -16,6 +16,8 @@ interface AuthState {
   session: Session | null;
   profile: Profile | null;
   isLoading: boolean;
+  showLoginAnimation: boolean;
+  setShowLoginAnimation: (val: boolean) => void;
   checkSession: () => Promise<void>;
   logout: () => Promise<void>;
   register: (companyName: string, fullName: string, username: string, password: string) => Promise<void>;
@@ -26,6 +28,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   session: null,
   profile: null,
   isLoading: true,
+  showLoginAnimation: false,
+  setShowLoginAnimation: (val) => set({ showLoginAnimation: val }),
 
   checkSession: async () => {
     set({ isLoading: true });
