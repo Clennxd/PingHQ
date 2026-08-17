@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/authStore';
@@ -6,17 +6,24 @@ import { useAuthStore } from '../store/authStore';
 export const Login: React.FC = () => {
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   
   const navigate = useNavigate();
-  const { checkSession } = useAuthStore();
+  const { session, checkSession } = useAuthStore();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  useEffect(() => {
+    // Hanya redirect jika user buka web dan SUDAH login, BUKAN saat sedang proses klik login
+    if (session && !isLoggingIn) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [session, isLoggingIn, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setIsSubmitting(true);
+    setErrorMsg('');
+    setIsLoggingIn(true); // Kunci form (1 kali klik saja)
 
     try {
       const email = `${userId}@pinghq.local`;
@@ -32,14 +39,19 @@ export const Login: React.FC = () => {
 
       await checkSession();
       
+      // Jika sukses, JANGAN set isLoggingIn(false). Langsung jalankan animasi!
       setIsAnimating(true);
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 1000);
       
+      setTimeout(() => {
+        navigate('/dashboard', { replace: true });
+      }, 1000);
     } catch (err: any) {
-      setError('User ID atau Password yang Anda masukkan salah');
-      setIsSubmitting(false);
+      setIsLoggingIn(false); // Buka kunci form HANYA jika gagal
+      if (err.message.includes('Invalid login credentials')) {
+        setErrorMsg('User ID atau Password yang Anda masukkan salah.');
+      } else {
+        setErrorMsg(err.message);
+      }
     }
   };
 
@@ -64,13 +76,13 @@ export const Login: React.FC = () => {
             <p className="text-gray-500 dark:text-gray-400 mt-2">Sign in to your account</p>
           </div>
 
-          {error && (
+          {errorMsg && (
             <div className="mb-6 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-md text-sm">
-              {error}
+              {errorMsg}
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="userId">
                 User ID
@@ -103,10 +115,10 @@ export const Login: React.FC = () => {
 
             <button
               type="submit"
-              disabled={isSubmitting || isAnimating}
+              disabled={isLoggingIn || isAnimating}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 dark:focus:ring-offset-slate-900 disabled:opacity-70 disabled:cursor-not-allowed mt-2 shadow-sm"
             >
-              {isSubmitting ? 'Signing in...' : 'Sign In'}
+              {isLoggingIn ? 'Memproses...' : 'Sign In'}
             </button>
           </form>
 
