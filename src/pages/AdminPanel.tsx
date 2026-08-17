@@ -6,6 +6,14 @@ import { Building2, Users, ArrowLeft, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { CustomDropdown } from '../components/CustomDropdown';
 
+const ROLE_OPTIONS = [
+  {id: 'ADMIN', name: 'Admin'},
+  {id: 'MANAGER', name: 'Manager'},
+  {id: 'SENIOR_SPV', name: 'Senior SPV'},
+  {id: 'SPV', name: 'SPV'},
+  {id: 'STAFF', name: 'Staff'}
+];
+
 export const AdminPanel: React.FC = () => {
   const { profile, checkSession } = useAuthStore();
   const navigate = useNavigate();
@@ -131,6 +139,36 @@ export const AdminPanel: React.FC = () => {
     }
   };
 
+  const updateEmployeeRole = async (userId: string, newRole: string) => {
+    setUpdatingUserId(userId);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: newRole })
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      toast.success('Jabatan berhasil diubah!');
+      
+      setEmployees(prev => prev.map(emp => {
+        if (emp.id === userId) {
+          return { ...emp, role: newRole };
+        }
+        return emp;
+      }));
+
+      // Jika Admin mengubah role-nya sendiri, refresh global state
+      if (profile?.id === userId) {
+        await checkSession();
+      }
+    } catch (error: any) {
+      toast.error('Gagal mengubah jabatan: ' + error.message);
+    } finally {
+      setUpdatingUserId(null);
+    }
+  };
+
   if (!profile || profile.role !== 'ADMIN') {
     return <Navigate to="/dashboard" replace />;
   }
@@ -226,23 +264,29 @@ export const AdminPanel: React.FC = () => {
                     key={emp.id} 
                     className={`flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4 p-4 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors w-full ${index !== employees.length - 1 ? 'border-b border-slate-200 dark:border-slate-700' : ''}`}
                   >
-                    <div className="flex flex-col min-w-0 w-full">
+                    <div className="flex flex-col min-w-0 w-full md:flex-1">
                       <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{emp.full_name}</p>
-                      <div className="flex flex-wrap items-center gap-2 mt-1">
-                        <p className="text-xs text-slate-500 truncate max-w-full">ID: {emp.user_id_login}</p>
-                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap shrink-0 ${emp.role === 'ADMIN' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'}`}>
-                          {emp.role}
-                        </span>
-                      </div>
+                      <p className="text-xs text-slate-500 truncate max-w-full mt-1">ID: {emp.user_id_login}</p>
                     </div>
-                    <div className="w-full md:w-auto shrink-0 mt-2 md:mt-0">
-                      <CustomDropdown
-                        options={departments.map(d => ({ id: d.id, name: d.name }))}
-                        value={emp.department_id || ''}
-                        onChange={(newDeptId) => updateEmployeeDepartment(emp.id, newDeptId)}
-                        isLoading={updatingUserId === emp.id}
-                        placeholder="Pilih Dept"
-                      />
+                    <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto shrink-0 mt-2 md:mt-0">
+                      <div className="w-full sm:w-36">
+                        <CustomDropdown
+                          options={ROLE_OPTIONS}
+                          value={emp.role || ''}
+                          onChange={(newRole) => updateEmployeeRole(emp.id, newRole)}
+                          isLoading={updatingUserId === emp.id}
+                          placeholder="Pilih Jabatan"
+                        />
+                      </div>
+                      <div className="w-full sm:w-40">
+                        <CustomDropdown
+                          options={departments.map(d => ({ id: d.id, name: d.name }))}
+                          value={emp.department_id || ''}
+                          onChange={(newDeptId) => updateEmployeeDepartment(emp.id, newDeptId)}
+                          isLoading={updatingUserId === emp.id}
+                          placeholder="Pilih Dept"
+                        />
+                      </div>
                     </div>
                   </li>
                 ))}
