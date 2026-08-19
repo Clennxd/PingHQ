@@ -3,6 +3,7 @@ import { useAuthStore } from '../store/authStore';
 import { useMemoStore } from '../store/memoStore';
 import { MemoCard } from '../components/MemoCard';
 import { CreateMemoModal } from '../components/CreateMemoModal';
+import { CustomDropdown } from '../components/CustomDropdown';
 import { LogOut, Building, Users, Info, Megaphone, Settings, Search, Bell, Sun, Moon, Plus, Radio, LayoutDashboard, CircleDot, Folder, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -11,6 +12,7 @@ export const Dashboard: React.FC = () => {
   const { memos, isLoading: isMemoLoading, error, fetchMemos, subscribeToMemos, unsubscribeMemos } = useMemoStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [filter, setFilter] = useState<'ALL' | 'INFO' | 'URGENT'>('ALL');
+  const [timeFilter, setTimeFilter] = useState('ALL');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const navigate = useNavigate();
 
@@ -65,9 +67,26 @@ export const Dashboard: React.FC = () => {
   const userName = profile.full_name || profile.name || 'User';
 
   const filteredMemos = memos.filter(m => {
-    if (filter === 'ALL') return true;
-    if (filter === 'INFO') return m.type === 'INFO' || m.type === 'TASK';
-    if (filter === 'URGENT') return m.type === 'URGENT';
+    // 1. Filter Kategori
+    if (filter === 'INFO' && m.type !== 'INFO' && m.type !== 'TASK') return false;
+    if (filter === 'URGENT' && m.type !== 'URGENT') return false;
+    
+    // 2. Filter Waktu
+    const now = new Date();
+    const memoDate = new Date(m.created_at);
+    if (timeFilter === 'TODAY') {
+      return memoDate.toDateString() === now.toDateString();
+    }
+    if (timeFilter === 'WEEK') {
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(now.getDate() - 7);
+      return memoDate >= sevenDaysAgo;
+    }
+    if (timeFilter === 'MONTH') {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(now.getDate() - 30);
+      return memoDate >= thirtyDaysAgo;
+    }
     return true;
   });
 
@@ -275,26 +294,47 @@ export const Dashboard: React.FC = () => {
                     Gagal memuat: {error}
                   </div>
                 )}
-
-                {isMemoLoading ? (
-                  <div className="flex justify-center py-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-                  </div>
-                ) : filteredMemos.length === 0 ? (
-                  <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 border-dashed shadow-sm">
-                    <div className="w-16 h-16 mx-auto bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
-                      <Info className="w-8 h-8 text-slate-400" />
+                
+                <div className="flex flex-col">
+                  {/* Header Feed & Time Filter */}
+                  <div className="flex items-center justify-between mb-4 relative z-40">
+                    <h2 className="text-sm md:text-base font-semibold text-slate-800 dark:text-white">
+                      Daftar Pengumuman
+                    </h2>
+                    <div className="w-40 md:w-48 relative">
+                      <CustomDropdown
+                        options={[
+                          { id: 'ALL', name: 'Semua Waktu' },
+                          { id: 'TODAY', name: 'Hari Ini' },
+                          { id: 'WEEK', name: '7 Hari Terakhir' },
+                          { id: 'MONTH', name: '30 Hari Terakhir' }
+                        ]}
+                        value={timeFilter}
+                        onChange={setTimeFilter}
+                      />
                     </div>
-                    <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-1">Belum ada pengumuman</h3>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm">Tidak ada memo yang sesuai dengan filter Anda.</p>
                   </div>
-                ) : (
-                  <div>
-                    {filteredMemos.map((memo) => (
-                      <MemoCard key={memo.id} memo={memo} />
-                    ))}
-                  </div>
-                )}
+
+                  {isMemoLoading ? (
+                    <div className="flex justify-center py-12 relative z-10">
+                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                    </div>
+                  ) : filteredMemos.length === 0 ? (
+                    <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 border-dashed shadow-sm relative z-10">
+                      <div className="w-16 h-16 mx-auto bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
+                        <Info className="w-8 h-8 text-slate-400" />
+                      </div>
+                      <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-1">Belum ada pengumuman</h3>
+                      <p className="text-slate-500 dark:text-slate-400 text-sm">Tidak ada memo yang sesuai dengan filter Anda.</p>
+                    </div>
+                  ) : (
+                    <div className="relative z-10">
+                      {filteredMemos.map((memo) => (
+                        <MemoCard key={memo.id} memo={memo} />
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
