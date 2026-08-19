@@ -3,18 +3,31 @@ import { useAuthStore } from '../store/authStore';
 import { useMemoStore } from '../store/memoStore';
 import { MemoCard } from '../components/MemoCard';
 import { CreateMemoModal } from '../components/CreateMemoModal';
-import { LogOut, Building, Users, Info, Megaphone, Settings, User } from 'lucide-react';
+import { LogOut, Building, Users, Info, Megaphone, Settings, Search, Bell, Sun, Moon, Plus, Radio, LayoutDashboard, CircleDot } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const Dashboard: React.FC = () => {
   const { profile, logout, isLoading: isProfileLoading } = useAuthStore();
   const { memos, isLoading: isMemoLoading, error, fetchMemos, subscribeToMemos, unsubscribeMemos } = useMemoStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [filter, setFilter] = useState<'ALL' | 'INFO' | 'URGENT'>('ALL');
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const navigate = useNavigate();
+
+  // Basic dark mode toggle detection
+  useEffect(() => {
+    if (document.documentElement.classList.contains('dark')) {
+      setIsDarkMode(true);
+    }
+  }, []);
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+    document.documentElement.classList.toggle('dark');
+  };
 
   useEffect(() => {
     if (profile) {
-      // Pastikan ada property company_id dan department_id di tabel profiles Anda.
       const companyId = profile.company_id || profile.companies?.id;
       const departmentId = profile.department_id || profile.departments?.id || null;
       
@@ -23,7 +36,6 @@ export const Dashboard: React.FC = () => {
         subscribeToMemos(companyId, departmentId);
       }
     }
-
     return () => {
       unsubscribeMemos();
     };
@@ -31,7 +43,7 @@ export const Dashboard: React.FC = () => {
 
   if (isProfileLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300">
+      <div className="flex h-screen items-center justify-center bg-[#F8FAFC] dark:bg-slate-950 text-slate-600 dark:text-slate-300 font-sans">
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mr-3"></div>
         Loading...
       </div>
@@ -40,15 +52,10 @@ export const Dashboard: React.FC = () => {
 
   if (!profile) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center text-center p-4 bg-slate-50 dark:bg-slate-900">
+      <div className="flex h-screen flex-col items-center justify-center text-center p-4 bg-[#F8FAFC] dark:bg-slate-950 font-sans">
         <h2 className="text-2xl font-bold text-red-500 mb-2">Data Profil Tidak Ditemukan</h2>
-        <p className="text-slate-500 dark:text-slate-400 mb-6">Akun Anda belum terdaftar di Perusahaan/Departemen manapun. Hubungi Admin.</p>
-        <button 
-          onClick={() => logout()}
-          className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors"
-        >
-          Logout & Kembali
-        </button>
+        <p className="text-slate-500 dark:text-slate-400 mb-6">Akun Anda belum terdaftar di Perusahaan/Departemen manapun.</p>
+        <button onClick={() => logout()} className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors">Logout</button>
       </div>
     );
   }
@@ -57,154 +64,248 @@ export const Dashboard: React.FC = () => {
   const departmentName = profile.departments?.name || 'All Departments';
   const userName = profile.full_name || profile.name || 'User';
 
-  return (
-    <div className="flex flex-col md:flex-row h-screen w-full bg-slate-50 dark:bg-slate-900 overflow-hidden">
-      {/* Sidebar (Desktop) / Header (Mobile) */}
-      <div className="w-full h-16 md:h-auto md:w-72 bg-white dark:bg-slate-800 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-700 flex-none z-10 flex flex-col">
-        <div className="flex-1 flex flex-col px-4 py-3 md:p-5 justify-center md:justify-start">
-          <div className="flex items-center justify-between mb-0 md:mb-6">
-            <div>
-              <h1 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white leading-tight">{companyName}</h1>
-              {/* Mobile only department sub-header */}
-              <p className="md:hidden text-xs md:text-sm text-slate-500 leading-tight">{departmentName}</p>
-            </div>
-            
-            {/* Mobile only profile/logout */}
-            <div className="flex md:hidden items-center space-x-3">
-              {profile.role === 'ADMIN' && (
-                <button onClick={() => navigate('/admin')} className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">
-                  <Settings className="w-5 h-5" />
-                </button>
-              )}
-              <button onClick={() => navigate('/profile')} className="text-slate-400 hover:text-blue-500">
-                <User className="w-5 h-5" />
-              </button>
-              <button onClick={() => logout()} className="text-slate-400 hover:text-red-500">
-                <LogOut className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
+  const filteredMemos = memos.filter(m => {
+    if (filter === 'ALL') return true;
+    if (filter === 'INFO') return m.type === 'INFO' || m.type === 'TASK';
+    if (filter === 'URGENT') return m.type === 'URGENT';
+    return true;
+  });
 
-          {/* Desktop only Organization / Department info & Create Button */}
-          <div className="hidden md:block">
+  return (
+    <div className="flex h-screen w-full bg-[#F8FAFC] dark:bg-slate-950 overflow-hidden font-sans">
+      
+      {/* SIDEBAR (Desktop Only) */}
+      <div className="hidden lg:flex w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex-col z-10 shrink-0">
+        <div className="p-6 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/50 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
+              <LayoutDashboard className="text-white w-4 h-4" />
+            </div>
+            <h1 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">PingHQ</h1>
+          </div>
+          {profile.role === 'ADMIN' && (
+            <button onClick={() => navigate('/admin')} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+              <Settings className="w-5 h-5" />
+            </button>
+          )}
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-6">
+          <div className="space-y-2">
             {profile.role === 'ADMIN' && (
               <button 
                 onClick={() => navigate('/admin')}
-                className="w-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold py-2.5 px-4 rounded-lg shadow-sm transition-colors flex items-center justify-center mb-3"
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg transition-colors"
               >
-                <Settings className="w-4 h-4 mr-2" />
-                Admin Panel
+                <Settings className="w-4 h-4" /> Admin Panel
               </button>
             )}
             <button 
               onClick={() => setIsModalOpen(true)}
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2.5 px-4 rounded-lg shadow-sm transition-colors flex items-center justify-center mb-8"
+              className="w-full flex items-center justify-between px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
             >
-              <Megaphone className="w-4 h-4 mr-2" />
-              Buat Pengumuman
-            </button>
-            
-            <div className="space-y-6">
-              <div>
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Organization</p>
-                <div className="flex items-center text-sm font-medium text-slate-800 dark:text-slate-200">
-                  <Building className="w-4 h-4 mr-2 text-blue-500" />
-                  {companyName}
-                </div>
+              <div className="flex items-center gap-2">
+                <Megaphone className="w-4 h-4" /> Buat Pengumuman
               </div>
-              
-              <div>
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Department</p>
-                <div className="flex items-center text-sm font-medium text-slate-800 dark:text-slate-200">
-                  <Users className="w-4 h-4 mr-2 text-green-500" />
-                  {departmentName}
-                </div>
+              <Plus className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div>
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 px-1">Organisasi</p>
+            <div className="space-y-1">
+              <div className="flex items-center gap-3 px-3 py-2 text-sm text-slate-700 dark:text-slate-300">
+                <Building className="w-4 h-4 text-slate-400 shrink-0" />
+                <span className="truncate">{companyName}</span>
+              </div>
+              <div className="flex items-center gap-3 px-3 py-2 text-sm text-slate-700 dark:text-slate-300">
+                <Users className="w-4 h-4 text-slate-400 shrink-0" />
+                <span className="truncate">{departmentName}</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Desktop only bottom profile/logout */}
-        <div className="hidden md:flex mt-auto pt-6 border-t border-slate-200 dark:border-slate-700 items-center justify-between p-5">
-          <div className="flex items-center overflow-hidden">
-            <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-sm mr-3 shrink-0">
-              {userName.charAt(0)}
+        {/* Footer Sidebar */}
+        <div className="p-4 border-t border-slate-100 dark:border-slate-800/50 shrink-0">
+          <div 
+            onClick={() => navigate('/profile')}
+            className="flex items-center justify-between p-2 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg cursor-pointer transition-colors"
+          >
+            <div className="flex items-center gap-3 overflow-hidden">
+              <div className="relative">
+                <div className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold text-slate-600 dark:text-slate-300 shrink-0 border border-slate-200 dark:border-slate-700">
+                  {userName.charAt(0)}
+                </div>
+                <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white dark:border-slate-900 rounded-full"></div>
+              </div>
+              <div className="truncate pr-2">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{userName}</p>
+                <p className="text-xs text-slate-500 truncate">{profile.role}</p>
+              </div>
             </div>
-            <div className="truncate pr-2">
-              <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{userName}</p>
-              <p className="text-xs text-slate-500 truncate">{profile.role || 'Member'}</p>
-            </div>
-          </div>
-          <div className="flex space-x-1 shrink-0">
-            <button 
-              onClick={() => navigate('/profile')}
-              className="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors"
-              title="Profil Saya"
-            >
-              <User className="w-4 h-4" />
-            </button>
-            <button 
-              onClick={() => logout()}
-              className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
-              title="Logout"
-            >
+            <button onClick={(e) => { e.stopPropagation(); logout(); }} className="text-slate-400 hover:text-red-500 shrink-0 p-1">
               <LogOut className="w-4 h-4" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Main Feed Area */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-8 relative">
-        <div className="max-w-3xl mx-auto pb-24 md:pb-0"> {/* padding-bottom added for mobile to avoid FAB overlap */}
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Broadcast Feed</h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Realtime updates and memos for {departmentName}</p>
+      {/* MAIN CONTENT */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Top Navbar */}
+        <div className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 lg:px-6 shrink-0 z-10 shadow-sm lg:shadow-none">
+          <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+            <span className="hidden sm:inline">Dashboard</span>
+            <span className="hidden sm:inline">&gt;</span>
+            <span className="font-medium text-slate-900 dark:text-white">Broadcast Feed</span>
           </div>
-
-          {error && (
-            <div className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-4 rounded-md mb-6 text-sm">
-              Failed to load memos: {error}
+          
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="relative hidden md:block">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input 
+                type="text" 
+                placeholder="Cari pengumuman..." 
+                className="w-64 pl-9 pr-4 py-1.5 bg-slate-100 dark:bg-slate-800 border-transparent rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white transition-all"
+              />
             </div>
-          )}
-
-          {isMemoLoading ? (
-            <div className="flex justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+            <button onClick={toggleDarkMode} className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+              {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
+            <button className="relative p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+              <Bell className="w-5 h-5" />
+              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+            </button>
+            <div 
+              className="lg:hidden w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center font-bold text-xs ml-1 sm:ml-2 cursor-pointer shadow-sm relative" 
+              onClick={() => navigate('/profile')}
+            >
+              {userName.charAt(0)}
+              <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white dark:border-slate-900 rounded-full"></div>
             </div>
-          ) : memos.length === 0 ? (
-            <div className="text-center py-20 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
-              <div className="w-16 h-16 mx-auto bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center mb-4">
-                <Info className="w-8 h-8 text-slate-400" />
-              </div>
-              <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-1">Belum ada pengumuman</h3>
-              <p className="text-slate-500 dark:text-slate-400 text-sm">Memo terbaru dari perusahaan atau departemen Anda akan muncul di sini.</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {memos.map((memo) => (
-                <MemoCard key={memo.id} memo={memo} />
-              ))}
-            </div>
-          )}
+          </div>
         </div>
+
+        {/* Content Body */}
+        <div className="flex-1 overflow-y-auto p-4 lg:p-6 pb-24 lg:pb-6 relative scroll-smooth">
+          <div className="max-w-6xl mx-auto">
+            {/* Content Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center shrink-0">
+                  <Radio className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Broadcast Feed</h2>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Pusat informasi dan pembaruan realtime tim Anda.</p>
+                </div>
+              </div>
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 sm:px-5 flex items-center gap-4 shadow-sm shrink-0">
+                <div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Total Pengumuman</p>
+                  <p className="text-xl font-bold text-slate-900 dark:text-white">{memos.length}</p>
+                </div>
+                <div className="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center">
+                  <Megaphone className="w-5 h-5 text-slate-400" />
+                </div>
+              </div>
+            </div>
+
+            {/* Grid Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              
+              {/* Kolom Kiri: Filter & Banner */}
+              <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-0">
+                {/* Filter Card */}
+                <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-2 shadow-sm">
+                  <div className="space-y-1">
+                    <button 
+                      onClick={() => setFilter('ALL')}
+                      className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${filter === 'ALL' ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
+                    >
+                      Semua Pengumuman
+                    </button>
+                    <button 
+                      onClick={() => setFilter('INFO')}
+                      className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center justify-between ${filter === 'INFO' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
+                    >
+                      Informasi / Tugas
+                      {filter === 'INFO' && <CircleDot className="w-4 h-4 text-blue-600 dark:text-blue-400" />}
+                    </button>
+                    <button 
+                      onClick={() => setFilter('URGENT')}
+                      className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center justify-between ${filter === 'URGENT' ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
+                    >
+                      Pengumuman Penting
+                      {filter === 'URGENT' && <CircleDot className="w-4 h-4 text-red-600 dark:text-red-400" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Banner Card */}
+                <div className="hidden lg:block bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-md relative overflow-hidden">
+                  <div className="absolute -right-4 -bottom-4 opacity-10">
+                    <Megaphone className="w-32 h-32" />
+                  </div>
+                  <div className="relative z-10">
+                    <h3 className="text-lg font-bold mb-2">Tetap Terhubung</h3>
+                    <p className="text-sm text-blue-100 mb-4 leading-relaxed">Jangan lewatkan informasi krusial dari manajemen dan divisi Anda.</p>
+                    <button onClick={() => setIsModalOpen(true)} className="bg-white text-blue-600 text-sm font-semibold px-4 py-2 rounded-lg shadow-sm hover:bg-blue-50 transition-colors w-full">
+                      Tulis Pengumuman Baru
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Kolom Kanan: Feed */}
+              <div className="lg:col-span-8">
+                {error && (
+                  <div className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-4 rounded-xl border border-red-200 dark:border-red-800 mb-6 text-sm shadow-sm">
+                    Gagal memuat: {error}
+                  </div>
+                )}
+
+                {isMemoLoading ? (
+                  <div className="flex justify-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                  </div>
+                ) : filteredMemos.length === 0 ? (
+                  <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 border-dashed shadow-sm">
+                    <div className="w-16 h-16 mx-auto bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
+                      <Info className="w-8 h-8 text-slate-400" />
+                    </div>
+                    <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-1">Belum ada pengumuman</h3>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm">Tidak ada memo yang sesuai dengan filter Anda.</p>
+                  </div>
+                ) : (
+                  <div>
+                    {filteredMemos.map((memo) => (
+                      <MemoCard key={memo.id} memo={memo} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile FAB Button */}
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="lg:hidden fixed bottom-6 right-6 z-50 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-xl flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
+        >
+          <Plus className="w-6 h-6" />
+        </button>
+
+        {profile && (
+          <CreateMemoModal 
+            isOpen={isModalOpen} 
+            onClose={() => setIsModalOpen(false)} 
+            profile={profile} 
+          />
+        )}
       </div>
-
-      {/* Mobile FAB Button */}
-      <button 
-        onClick={() => setIsModalOpen(true)}
-        className="md:hidden fixed bottom-6 right-6 z-50 bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-full shadow-xl flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
-      >
-        <Megaphone className="w-6 h-6" />
-      </button>
-
-      {profile && (
-        <CreateMemoModal 
-          isOpen={isModalOpen} 
-          onClose={() => setIsModalOpen(false)} 
-          profile={profile} 
-        />
-      )}
     </div>
   );
 };

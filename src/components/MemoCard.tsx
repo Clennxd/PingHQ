@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import type { Memo } from '../store/memoStore';
-import { AlertCircle, CheckCircle2, Info, Eye } from 'lucide-react';
+import { MoreVertical, Bookmark, Eye } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useMemoStore } from '../store/memoStore';
 import { ReadReceiptsModal } from './ReadReceiptsModal';
@@ -11,8 +11,9 @@ interface MemoCardProps {
 
 export const MemoCard: React.FC<MemoCardProps> = ({ memo }) => {
   const { profile } = useAuthStore();
-  const { markMemoAsRead } = useMemoStore();
+  const { markMemoAsRead, getMemoReaders } = useMemoStore();
   const [isReceiptsOpen, setIsReceiptsOpen] = useState(false);
+  const [readCount, setReadCount] = useState<number | null>(null);
 
   useEffect(() => {
     if (profile?.id) {
@@ -20,27 +21,24 @@ export const MemoCard: React.FC<MemoCardProps> = ({ memo }) => {
     }
   }, [memo.id, profile?.id, markMemoAsRead]);
 
+  useEffect(() => {
+    // Optionally fetch read count
+    const fetchReaders = async () => {
+      const readers = await getMemoReaders(memo.id);
+      setReadCount(readers.length);
+    };
+    fetchReaders();
+  }, [memo.id, getMemoReaders]);
+
   const getBadgeStyle = (type: string) => {
     switch (type) {
       case 'URGENT':
-        return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800';
+        return 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400';
       case 'TASK':
-        return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800';
+        return 'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400';
       case 'INFO':
       default:
-        return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800';
-    }
-  };
-
-  const getIcon = (type: string) => {
-    switch (type) {
-      case 'URGENT':
-        return <AlertCircle className="w-3 h-3 md:w-3.5 md:h-3.5 mr-1" />;
-      case 'TASK':
-        return <CheckCircle2 className="w-3 h-3 md:w-3.5 md:h-3.5 mr-1" />;
-      case 'INFO':
-      default:
-        return <Info className="w-3 h-3 md:w-3.5 md:h-3.5 mr-1" />;
+        return 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400';
     }
   };
 
@@ -56,39 +54,55 @@ export const MemoCard: React.FC<MemoCardProps> = ({ memo }) => {
   };
 
   return (
-    <div className="bg-white dark:bg-[#131926] rounded-xl p-4 md:p-6 shadow-sm border border-gray-100 dark:border-[#1E293B] mb-4 transition-all hover:shadow-md">
-      <div className="flex justify-between items-start mb-3 md:mb-4">
-        <div className="flex items-center">
-          <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 font-bold mr-3 md:mr-4 shrink-0 text-sm md:text-base">
+    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 mb-4 shadow-sm transition-all hover:shadow-md">
+      {/* Header */}
+      <div className="flex justify-between items-start">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 flex items-center justify-center font-bold text-sm shrink-0">
             {memo.profiles?.full_name?.charAt(0) || '?'}
           </div>
-          <div>
-            <h4 className="font-semibold text-slate-900 dark:text-slate-100 text-sm md:text-base leading-tight">
-              {memo.profiles?.full_name || 'Unknown User'}
-            </h4>
-            <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <h4 className="font-semibold text-slate-900 dark:text-white leading-tight">
+                {memo.profiles?.full_name || 'Unknown User'}
+              </h4>
+              <span className={`px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold tracking-wide border border-transparent ${getBadgeStyle(memo.type)}`}>
+                {memo.type}
+              </span>
+            </div>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
               {formatDate(memo.created_at)}
             </p>
           </div>
         </div>
-        <div className={`flex items-center px-2 py-0.5 rounded-full text-[10px] md:text-xs font-semibold border shrink-0 ml-2 uppercase tracking-wide ${getBadgeStyle(memo.type)}`}>
-          {getIcon(memo.type)}
-          {memo.type}
-        </div>
+        <button className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors p-1 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800">
+          <MoreVertical size={18} />
+        </button>
       </div>
       
-      <div className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap text-sm md:text-base leading-relaxed md:leading-normal mt-2 md:mt-3 break-words">
+      {/* Body */}
+      <div className="text-slate-700 dark:text-slate-300 mt-3 leading-relaxed break-words whitespace-pre-wrap text-sm md:text-base">
         {memo.message}
       </div>
 
-      <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/50 flex items-center justify-end">
-        <button 
-          onClick={() => setIsReceiptsOpen(true)}
-          className="flex items-center gap-1.5 text-xs md:text-sm text-slate-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors font-medium"
-        >
-          <Eye size={14} />
-          Riwayat Dilihat
-        </button>
+      {/* Footer */}
+      <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
+        <div className="text-xs text-slate-400 dark:text-slate-500">
+          {/* Ruang opsional untuk footer kiri */}
+        </div>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setIsReceiptsOpen(true)}
+            className="flex items-center gap-1.5 text-xs md:text-sm text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 transition-colors font-medium"
+          >
+            <Eye size={16} />
+            <span>{readCount !== null ? `${readCount} Dilihat` : 'Dilihat'}</span>
+          </button>
+          <div className="w-px h-4 bg-slate-200 dark:bg-slate-700"></div>
+          <button className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+            <Bookmark size={16} />
+          </button>
+        </div>
       </div>
 
       <ReadReceiptsModal 
