@@ -3,7 +3,7 @@ import { useAuthStore } from '../store/authStore';
 import { useMemoStore } from '../store/memoStore';
 import { MemoCard } from '../components/MemoCard';
 import { CreateMemoModal } from '../components/CreateMemoModal';
-import { LogOut, Building, Users, Info, Megaphone, Settings, Search, Bell, Sun, Moon, Plus, Radio, LayoutDashboard, CircleDot } from 'lucide-react';
+import { LogOut, Building, Users, Info, Megaphone, Settings, Search, Bell, Sun, Moon, Plus, Radio, LayoutDashboard, CircleDot, Folder, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const Dashboard: React.FC = () => {
@@ -161,7 +161,7 @@ export const Dashboard: React.FC = () => {
             <span className="font-medium text-slate-900 dark:text-white">Broadcast Feed</span>
           </div>
           
-          <div className="flex items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-3 md:gap-4">
             {profile.role === 'ADMIN' && (
               <button onClick={() => navigate('/admin')} className="lg:hidden p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
                 <Settings className="w-5 h-5" />
@@ -193,10 +193,10 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* Content Body */}
-        <div className="flex-1 overflow-y-auto p-4 lg:p-6 pb-24 lg:pb-6 relative scroll-smooth">
+        <div className="flex-1 overflow-y-scroll p-4 lg:p-6 pb-24 lg:pb-6 relative scroll-smooth" style={{ scrollbarGutter: 'stable' }}>
           <div className="max-w-6xl mx-auto">
             {/* Content Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center shrink-0">
                   <Radio className="w-6 h-6 text-blue-600 dark:text-blue-400" />
@@ -206,46 +206,51 @@ export const Dashboard: React.FC = () => {
                   <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Pusat informasi dan pembaruan realtime tim Anda.</p>
                 </div>
               </div>
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 sm:px-5 flex items-center gap-4 shadow-sm shrink-0">
-                <div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Total Pengumuman</p>
-                  <p className="text-xl font-bold text-slate-900 dark:text-white">{memos.length}</p>
+              <div className="flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 w-full md:w-auto md:min-w-[200px] shadow-sm">
+                <div className="flex flex-col">
+                  <span className="text-xs md:text-sm text-slate-500 font-medium">Total Pengumuman</span>
+                  <span className="text-2xl font-bold text-slate-800 dark:text-white">{memos.length}</span>
                 </div>
-                <div className="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center">
-                  <Megaphone className="w-5 h-5 text-slate-400" />
+                <div className="p-3 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full">
+                  <Megaphone className="w-5 h-5" />
                 </div>
               </div>
             </div>
 
             {/* Grid Layout */}
-            <div className="flex flex-col lg:grid lg:grid-cols-12 gap-4 lg:gap-6 items-start w-full">
+            <div className="flex flex-col lg:grid lg:grid-cols-12 gap-4 lg:gap-6 items-start w-full max-w-full">
               
               {/* Kolom Kiri: Filter & Banner */}
-              <div className="w-full lg:col-span-4 space-y-4 lg:space-y-6 lg:sticky lg:top-0">
-                {/* Filter Card */}
-                <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-2 shadow-sm w-full overflow-hidden">
-                  <div className="flex flex-row overflow-x-auto lg:flex-col lg:space-y-1 gap-2 lg:gap-0 pb-1 lg:pb-0" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                    <button 
-                      onClick={() => setFilter('ALL')}
-                      className={`shrink-0 text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${filter === 'ALL' ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
-                    >
-                      Semua Pengumuman
-                    </button>
-                    <button 
-                      onClick={() => setFilter('INFO')}
-                      className={`shrink-0 text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 lg:justify-between ${filter === 'INFO' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
-                    >
-                      Informasi / Tugas
-                      {filter === 'INFO' && <CircleDot className="w-4 h-4 text-blue-600 dark:text-blue-400" />}
-                    </button>
-                    <button 
-                      onClick={() => setFilter('URGENT')}
-                      className={`shrink-0 text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 lg:justify-between ${filter === 'URGENT' ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
-                    >
-                      Pengumuman Penting
-                      {filter === 'URGENT' && <CircleDot className="w-4 h-4 text-red-600 dark:text-red-400" />}
-                    </button>
-                  </div>
+              <div className="lg:col-span-4 xl:col-span-3 flex flex-col gap-4 w-full min-w-0 lg:sticky lg:top-0">
+                {/* Adaptive Filter UI */}
+                <div className="flex lg:flex-col overflow-x-auto lg:overflow-visible gap-2 lg:gap-1 pb-2 lg:pb-0 -mx-4 px-4 lg:mx-0 lg:px-0 hide-scrollbar lg:bg-white lg:dark:bg-slate-900 lg:border lg:border-slate-200 lg:dark:border-slate-800 lg:rounded-xl lg:p-3 lg:shadow-sm" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                  <button 
+                    onClick={() => setFilter('ALL')}
+                    className={filter === 'ALL' 
+                      ? "flex items-center gap-2 px-4 lg:px-3 py-2 lg:py-2.5 rounded-full lg:rounded-lg text-sm font-medium whitespace-nowrap flex-shrink-0 transition-all bg-blue-600 lg:bg-blue-50 text-white lg:text-blue-700 shadow-md lg:shadow-none border border-blue-600 lg:border-transparent"
+                      : "flex items-center gap-2 px-4 lg:px-3 py-2 lg:py-2.5 rounded-full lg:rounded-lg text-sm font-medium whitespace-nowrap flex-shrink-0 transition-all bg-white lg:bg-transparent dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 lg:border-transparent dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"}
+                  >
+                    <Folder className="w-4 h-4" />
+                    Semua Pengumuman
+                  </button>
+                  <button 
+                    onClick={() => setFilter('INFO')}
+                    className={filter === 'INFO' 
+                      ? "flex items-center gap-2 px-4 lg:px-3 py-2 lg:py-2.5 rounded-full lg:rounded-lg text-sm font-medium whitespace-nowrap flex-shrink-0 transition-all bg-blue-600 lg:bg-blue-50 text-white lg:text-blue-700 shadow-md lg:shadow-none border border-blue-600 lg:border-transparent"
+                      : "flex items-center gap-2 px-4 lg:px-3 py-2 lg:py-2.5 rounded-full lg:rounded-lg text-sm font-medium whitespace-nowrap flex-shrink-0 transition-all bg-white lg:bg-transparent dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 lg:border-transparent dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"}
+                  >
+                    <Info className="w-4 h-4" />
+                    Informasi / Tugas
+                  </button>
+                  <button 
+                    onClick={() => setFilter('URGENT')}
+                    className={filter === 'URGENT' 
+                      ? "flex items-center gap-2 px-4 lg:px-3 py-2 lg:py-2.5 rounded-full lg:rounded-lg text-sm font-medium whitespace-nowrap flex-shrink-0 transition-all bg-blue-600 lg:bg-blue-50 text-white lg:text-blue-700 shadow-md lg:shadow-none border border-blue-600 lg:border-transparent"
+                      : "flex items-center gap-2 px-4 lg:px-3 py-2 lg:py-2.5 rounded-full lg:rounded-lg text-sm font-medium whitespace-nowrap flex-shrink-0 transition-all bg-white lg:bg-transparent dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 lg:border-transparent dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"}
+                  >
+                    <AlertCircle className="w-4 h-4" />
+                    Pengumuman Penting
+                  </button>
                 </div>
 
                 {/* Banner Card */}
@@ -264,7 +269,7 @@ export const Dashboard: React.FC = () => {
               </div>
 
               {/* Kolom Kanan: Feed */}
-              <div className="w-full lg:col-span-8">
+              <div className="lg:col-span-8 xl:col-span-9 w-full min-w-0">
                 {error && (
                   <div className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-4 rounded-xl border border-red-200 dark:border-red-800 mb-6 text-sm shadow-sm">
                     Gagal memuat: {error}
