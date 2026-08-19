@@ -162,6 +162,11 @@ export const Dashboard: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-3 sm:gap-4">
+            {profile.role === 'ADMIN' && (
+              <button onClick={() => navigate('/admin')} className="lg:hidden p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+                <Settings className="w-5 h-5" />
+              </button>
+            )}
             <div className="relative hidden md:block">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input 
@@ -213,29 +218,29 @@ export const Dashboard: React.FC = () => {
             </div>
 
             {/* Grid Layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <div className="flex flex-col lg:grid lg:grid-cols-12 gap-4 lg:gap-6 items-start w-full">
               
               {/* Kolom Kiri: Filter & Banner */}
-              <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-0">
+              <div className="w-full lg:col-span-4 space-y-4 lg:space-y-6 lg:sticky lg:top-0">
                 {/* Filter Card */}
-                <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-2 shadow-sm">
-                  <div className="space-y-1">
+                <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-2 shadow-sm w-full overflow-hidden">
+                  <div className="flex flex-row overflow-x-auto lg:flex-col lg:space-y-1 gap-2 lg:gap-0 pb-1 lg:pb-0" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                     <button 
                       onClick={() => setFilter('ALL')}
-                      className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${filter === 'ALL' ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
+                      className={`shrink-0 text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${filter === 'ALL' ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
                     >
                       Semua Pengumuman
                     </button>
                     <button 
                       onClick={() => setFilter('INFO')}
-                      className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center justify-between ${filter === 'INFO' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
+                      className={`shrink-0 text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 lg:justify-between ${filter === 'INFO' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
                     >
                       Informasi / Tugas
                       {filter === 'INFO' && <CircleDot className="w-4 h-4 text-blue-600 dark:text-blue-400" />}
                     </button>
                     <button 
                       onClick={() => setFilter('URGENT')}
-                      className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center justify-between ${filter === 'URGENT' ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
+                      className={`shrink-0 text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 lg:justify-between ${filter === 'URGENT' ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
                     >
                       Pengumuman Penting
                       {filter === 'URGENT' && <CircleDot className="w-4 h-4 text-red-600 dark:text-red-400" />}
@@ -259,7 +264,7 @@ export const Dashboard: React.FC = () => {
               </div>
 
               {/* Kolom Kanan: Feed */}
-              <div className="lg:col-span-8">
+              <div className="w-full lg:col-span-8">
                 {error && (
                   <div className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-4 rounded-xl border border-red-200 dark:border-red-800 mb-6 text-sm shadow-sm">
                     Gagal memuat: {error}
