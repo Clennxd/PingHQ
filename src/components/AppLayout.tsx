@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { CreateMemoModal } from './CreateMemoModal';
-import { LayoutDashboard, Building2, Users, LogOut, Radio, Plus, Clock, Settings } from 'lucide-react';
+import { LayoutDashboard, Building2, Users, LogOut, Radio, Plus, Clock, Settings, Menu, X } from 'lucide-react';
 
 export const AppLayout: React.FC = () => {
   const { profile, logout } = useAuthStore();
@@ -10,11 +10,16 @@ export const AppLayout: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const activeTab = searchParams.get('tab');
   
   const companyName = profile?.companies?.name || 'PingHQ';
   const userName = profile?.full_name || profile?.name || 'User';
+
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location]);
 
   const isActive = (path: string, tab?: string) => {
     if (tab) {
@@ -24,17 +29,21 @@ export const AppLayout: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen w-full bg-[#F8FAFC] dark:bg-slate-950 overflow-hidden font-sans">
+    <div className="flex h-screen w-full bg-[#F8FAFC] dark:bg-slate-950 overflow-hidden font-sans relative">
       
-      {/* SIDEBAR (Desktop Only) */}
-      <div className="hidden md:flex flex-col w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 h-full shrink-0 z-10">
+      {/* SIDEBAR (Responsive) */}
+      <aside className={`fixed inset-y-0 left-0 z-50 w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 flex flex-col ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         
+        <button className="md:hidden absolute top-4 right-4 text-slate-500" onClick={() => setIsMobileMenuOpen(false)}>
+          <X size={24} />
+        </button>
+
         {/* Header Logo */}
         <div className="p-6 flex items-center gap-3 border-b border-slate-100 dark:border-slate-800/50">
           <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center shrink-0">
             <Radio className="text-white w-4 h-4" />
           </div>
-          <h1 className="text-lg font-bold text-slate-900 dark:text-white truncate">
+          <h1 className="text-lg font-bold text-slate-900 dark:text-white truncate pr-8">
             {companyName}
           </h1>
         </div>
@@ -134,12 +143,29 @@ export const AppLayout: React.FC = () => {
             </button>
           </div>
         </div>
-      </div>
+      </aside>
+
+      {/* OVERLAY GELAP */}
+      {isMobileMenuOpen && <div className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)} />}
 
       {/* MAIN CONTENT AREA */}
       <div className="flex-1 flex flex-col h-full overflow-y-auto overflow-x-hidden w-full relative">
+        
+        {/* MOBILE HEADER */}
+        <div className="md:hidden flex items-center justify-between bg-white dark:bg-slate-900 h-16 px-4 border-b border-slate-200 dark:border-slate-800 flex-shrink-0 z-20">
+          <span className="font-bold text-blue-600 text-xl tracking-tight">PingHQ</span>
+          <button onClick={() => setIsMobileMenuOpen(true)} className="text-slate-700 dark:text-slate-300 p-2 -mr-2">
+            <Menu size={24} />
+          </button>
+        </div>
+
         <Outlet />
       </div>
+
+      {/* GLOBAL FAB (Mobile) */}
+      <button onClick={() => setIsModalOpen(true)} className="md:hidden fixed bottom-6 right-6 z-30 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-xl shadow-blue-600/30 transition-transform active:scale-95">
+        <Plus size={24} />
+      </button>
 
       {/* Global Modals */}
       {profile && (
