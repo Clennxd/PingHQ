@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, Navigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { supabase } from '../lib/supabase';
-import { Building2, Users, Plus, LayoutDashboard, Settings, ShieldCheck, Clock } from 'lucide-react';
+import { Building2, Users, Plus, LayoutDashboard, Settings, ShieldCheck, Clock, RefreshCw, UserX } from 'lucide-react';
 import { toast } from 'sonner';
 import { CustomDropdown } from '../components/CustomDropdown';
 
@@ -38,6 +38,7 @@ export const AdminPanel: React.FC = () => {
   const [newDeptName, setNewDeptName] = useState('');
   const [isAddingDept, setIsAddingDept] = useState(false);
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
+  const [isResettingCode, setIsResettingCode] = useState(false);
 
   const [companyNameInput, setCompanyNameInput] = useState(profile?.companies?.name || '');
   const [isSavingCompany, setIsSavingCompany] = useState(false);
@@ -207,6 +208,34 @@ export const AdminPanel: React.FC = () => {
     }
   };
 
+  const regenerateInviteCode = async () => {
+    if (!confirm('Apakah Anda yakin ingin mengganti kode undangan? Kode lama tidak akan bisa digunakan lagi.')) return;
+    setIsResettingCode(true);
+    try {
+      const newCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+      const { error } = await supabase.from('companies').update({ invite_code: newCode }).eq('id', profile.company_id);
+      if (error) throw error;
+      toast.success('Kode undangan berhasil diperbarui!');
+      window.location.reload();
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setIsResettingCode(false);
+    }
+  };
+
+  const kickUser = async (userId: string, userName: string) => {
+    if (!confirm(`TENDANG PENGGUNA: Apakah Anda yakin ingin mengeluarkan ${userName} dari organisasi ini?`)) return;
+    try {
+      const { error } = await supabase.from('profiles').update({ company_id: null, department_id: null, role: 'STAFF' }).eq('id', userId);
+      if (error) throw error;
+      toast.success(`${userName} berhasil dikeluarkan dari organisasi.`);
+      setEmployees(prev => prev.filter(p => p.id !== userId));
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
+
   if (!profile || profile.role !== 'ADMIN') return <Navigate to="/dashboard" replace />;
 
   if (isLoading) {
@@ -303,11 +332,23 @@ export const AdminPanel: React.FC = () => {
           {/* Banner Kode Undangan */}
           <div className="m-4 md:mx-8 md:mb-6 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/50 rounded-2xl p-4 md:p-8 text-center relative overflow-hidden shrink-0 shadow-sm">
             <div className="relative z-10 flex flex-col items-center justify-center">
-              <h2 className="text-xs md:text-sm font-semibold text-indigo-900/60 dark:text-indigo-400/80 uppercase tracking-widest mb-3 md:mb-4">Kode Undangan Organisasi</h2>
-              <div className="bg-white dark:bg-slate-900 px-4 py-3 md:px-10 md:py-5 rounded-xl border border-indigo-100 dark:border-indigo-800 shadow-sm mb-3 md:mb-4 w-full md:w-auto inline-flex justify-center overflow-hidden">
-                <span className="tracking-[0.2em] md:tracking-[0.5em] text-2xl md:text-4xl text-indigo-600 dark:text-indigo-400 font-bold font-mono md:ml-2 break-all text-center">
+              <div className="flex items-center justify-center gap-2 mb-3 md:mb-4">
+                <h2 className="text-xs md:text-sm font-semibold text-indigo-900/60 dark:text-indigo-400/80 uppercase tracking-widest">Kode Undangan Organisasi</h2>
+              </div>
+              <div className="bg-white dark:bg-slate-900 px-4 py-3 md:px-10 md:py-5 rounded-xl border border-indigo-100 dark:border-indigo-800 shadow-sm mb-3 md:mb-4 w-full md:w-auto inline-flex flex-col items-center justify-center overflow-hidden gap-3">
+                <span className="tracking-[0.2em] md:tracking-[0.5em] text-2xl md:text-4xl text-indigo-600 dark:text-indigo-400 font-bold font-mono break-all text-center">
                   {company?.invite_code || 'TIDAK TERSEDIA'}
                 </span>
+                {company?.invite_code && (
+                  <button 
+                    onClick={regenerateInviteCode}
+                    disabled={isResettingCode}
+                    className="flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 transition-colors bg-slate-100 hover:bg-indigo-50 dark:bg-slate-800 dark:hover:bg-indigo-900/30 px-3 py-1.5 rounded-full disabled:opacity-50"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${isResettingCode ? 'animate-spin' : ''}`} />
+                    {isResettingCode ? 'Memperbarui...' : 'Perbarui Kode'}
+                  </button>
+                )}
               </div>
               <p className="text-xs md:text-sm text-indigo-700/80 dark:text-indigo-300/80 max-w-md mx-auto leading-relaxed px-2">
                 Berikan kode ini kepada pengguna Anda agar mereka bisa bergabung ke organisasi <strong className="font-semibold text-indigo-900 dark:text-indigo-100">{company?.name}</strong>.
@@ -338,7 +379,7 @@ export const AdminPanel: React.FC = () => {
                         </div>
                       </div>
                       
-                      <div className="flex flex-col sm:flex-row gap-2 w-full xl:w-auto shrink-0">
+                      <div className="flex flex-col sm:flex-row gap-2 w-full xl:w-auto shrink-0 items-center">
                         <div className="w-full sm:w-1/2 xl:w-36">
                           <CustomDropdown
                             options={ROLE_OPTIONS}
@@ -357,6 +398,15 @@ export const AdminPanel: React.FC = () => {
                             placeholder="Bagian"
                           />
                         </div>
+                        {emp.id !== profile.id && (
+                          <button
+                            onClick={() => kickUser(emp.id, emp.full_name)}
+                            className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors sm:ml-1"
+                            title="Keluarkan Pengguna"
+                          >
+                            <UserX className="w-5 h-5" />
+                          </button>
+                        )}
                       </div>
                     </div>
                   );

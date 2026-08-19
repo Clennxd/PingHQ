@@ -98,7 +98,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       
       console.log("2. SignUp Sukses. ID:", authData.user.id);
       
-      const { data: company, error: companyError } = await supabase.from('companies').insert({ name: companyName }).select().single();
+      const newInviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+      const { data: company, error: companyError } = await supabase.from('companies').insert({ name: companyName, invite_code: newInviteCode }).select().single();
       if (companyError) throw new Error("Company Error: " + companyError.message);
       
       const { data: dept, error: deptError } = await supabase.from('departments').insert({ company_id: company.id, name: 'Pusat' }).select().single();
