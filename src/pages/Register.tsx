@@ -37,7 +37,7 @@ export const Register: React.FC = () => {
       <div className="w-full max-w-md bg-white dark:bg-[#131926] border border-[#E2E8F0] dark:border-[#1E293B] rounded-xl shadow-lg p-8">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">PingHQ</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-2">Daftar Akun Perusahaan Baru</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-2">Daftar Akun Organisasi Baru</p>
         </div>
 
         {errorMsg && (
@@ -49,7 +49,7 @@ export const Register: React.FC = () => {
         <form onSubmit={handleRegister} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="companyName">
-              Nama Perusahaan
+              Nama Organisasi
             </label>
             <input
               id="companyName"
@@ -58,7 +58,7 @@ export const Register: React.FC = () => {
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
               className="w-full px-4 py-2 bg-transparent border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
-              placeholder="Masukkan nama perusahaan"
+              placeholder="Masukkan nama organisasi"
             />
           </div>
 

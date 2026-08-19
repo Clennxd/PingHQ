@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useMemoStore } from '../store/memoStore';
 import type { Profile } from '../store/authStore';
 import { supabase } from '../lib/supabase';
@@ -55,23 +55,25 @@ export const CreateMemoModal: React.FC<CreateMemoModalProps> = ({ isOpen, onClos
   }, [isOpen, profile]);
 
   // Derived options based on role
-  const targetOptions: TargetOption[] = [];
-  
-  if (profile.role === 'ADMIN') {
-    targetOptions.push({ value: 'ALL', label: 'Seluruh Perusahaan' });
-    departments.forEach(dept => {
-      targetOptions.push({ value: dept.id, label: `Departemen: ${dept.name}` });
-    });
-  } else if (['MANAGER', 'SENIOR_SPV', 'SPV'].includes(profile.role)) {
-    targetOptions.push({ value: 'ALL', label: 'Seluruh Perusahaan' });
-    if (profile.department_id) {
-      targetOptions.push({ value: profile.department_id, label: 'Departemen Internal' });
+  const targetOptions: TargetOption[] = useMemo(() => {
+    const options: TargetOption[] = [];
+    if (profile.role === 'ADMIN') {
+      options.push({ value: 'ALL', label: 'Seluruh Organisasi' });
+      departments.forEach(dept => {
+        options.push({ value: dept.id, label: `Bagian: ${dept.name}` });
+      });
+    } else if (['MANAGER', 'SENIOR_SPV', 'SPV'].includes(profile.role)) {
+      options.push({ value: 'ALL', label: 'Seluruh Organisasi' });
+      if (profile.department_id) {
+        options.push({ value: profile.department_id, label: 'Bagian Internal' });
+      }
+    } else if (profile.role === 'STAFF') {
+      if (profile.department_id) {
+        options.push({ value: profile.department_id, label: 'Bagian Internal' });
+      }
     }
-  } else if (profile.role === 'STAFF') {
-    if (profile.department_id) {
-      targetOptions.push({ value: profile.department_id, label: 'Departemen Internal' });
-    }
-  }
+    return options;
+  }, [profile.role, profile.department_id, departments]);
 
   // Fallback default target based on options
   useEffect(() => {

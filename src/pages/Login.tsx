@@ -124,13 +124,13 @@ export const Login: React.FC = () => {
 
           <div className="mt-8 text-center space-y-3">
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Karyawan Baru?{' '}
+              Pengguna Baru?{' '}
               <Link to="/join" className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors">
                 Gabung pakai Kode Undangan
               </Link>
             </p>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Belum punya akun perusahaan?{' '}
+              Belum punya akun organisasi?{' '}
               <Link to="/register" className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors">
                 Daftar di sini
               </Link>

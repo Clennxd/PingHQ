@@ -8,6 +8,7 @@ import { Dashboard } from './pages/Dashboard';
 import { AdminPanel } from './pages/AdminPanel';
 import { Profile } from './pages/Profile';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { AppLayout } from './components/AppLayout';
 import { Toaster } from 'sonner';
 
 function App() {
@@ -33,23 +34,11 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/join" element={<Join />} />
         
-        <Route path="/dashboard" element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        } />
-        
-        <Route path="/admin" element={
-          <ProtectedRoute>
-            <AdminPanel />
-          </ProtectedRoute>
-        } />
-        
-        <Route path="/profile" element={
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
-        } />
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/admin" element={<AdminPanel />} />
+        </Route>
 
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

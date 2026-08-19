@@ -1,10 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useNavigate, Navigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { supabase } from '../lib/supabase';
-import { Building2, Users, ArrowLeft, Plus, LayoutDashboard, Settings, Building, LogOut, ShieldCheck } from 'lucide-react';
+import { Building2, Users, Plus, LayoutDashboard, Settings, ShieldCheck, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { CustomDropdown } from '../components/CustomDropdown';
+
+const ADMIN_MENUS = [
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'bagian', label: 'Bagian', icon: Building2 },
+  { id: 'pengguna', label: 'Pengguna', icon: Users },
+  { id: 'aktivitas', label: 'Aktivitas', icon: Clock },
+  { id: 'pengaturan', label: 'Pengaturan', icon: Settings },
+];
 
 const ROLE_OPTIONS = [
   {id: 'ADMIN', name: 'Admin'},
@@ -15,17 +23,24 @@ const ROLE_OPTIONS = [
 ];
 
 export const AdminPanel: React.FC = () => {
-  const { profile, checkSession, logout } = useAuthStore();
+  const { profile, checkSession } = useAuthStore();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  const activeTab = searchParams.get('tab') || 'bagian';
 
   const [company, setCompany] = useState<any>(null);
   const [departments, setDepartments] = useState<any[]>([]);
   const [employees, setEmployees] = useState<any[]>([]);
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   const [newDeptName, setNewDeptName] = useState('');
   const [isAddingDept, setIsAddingDept] = useState(false);
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
+
+  const [companyNameInput, setCompanyNameInput] = useState(profile?.companies?.name || '');
+  const [isSavingCompany, setIsSavingCompany] = useState(false);
 
   useEffect(() => {
     if (!profile) return;
@@ -49,6 +64,7 @@ export const AdminPanel: React.FC = () => {
           .single();
         if (compErr) throw compErr;
         setCompany(compData);
+        if (compData) setCompanyNameInput(compData.name);
 
         // Fetch Departments
         const { data: deptData, error: deptErr } = await supabase
@@ -67,6 +83,16 @@ export const AdminPanel: React.FC = () => {
           .order('full_name', { ascending: true });
         if (empErr) throw empErr;
         setEmployees(empData || []);
+
+        // Fetch Recent Activity
+        const { data: activityData, error: actErr } = await supabase
+          .from('memos')
+          .select('*, profiles(full_name)')
+          .eq('company_id', companyId)
+          .order('created_at', { ascending: false })
+          .limit(10);
+        if (actErr) throw actErr;
+        setRecentActivity(activityData || []);
 
       } catch (error: any) {
         toast.error('Gagal memuat data admin: ' + error.message);
@@ -94,9 +120,9 @@ export const AdminPanel: React.FC = () => {
       
       setDepartments([...departments, data]);
       setNewDeptName('');
-      toast.success('Departemen berhasil ditambahkan');
+      toast.success('Bagian berhasil ditambahkan');
     } catch (error: any) {
-      toast.error('Gagal menambah departemen: ' + error.message);
+      toast.error('Gagal menambah bagian: ' + error.message);
     } finally {
       setIsAddingDept(false);
     }
@@ -111,7 +137,7 @@ export const AdminPanel: React.FC = () => {
         .eq('id', userId);
 
       if (error) throw error;
-      toast.success('Departemen berhasil diubah!');
+      toast.success('Bagian berhasil diubah!');
       
       const updatedDept = departments.find(d => d.id === newDeptId);
       setEmployees(prev => prev.map(emp => {
@@ -127,7 +153,7 @@ export const AdminPanel: React.FC = () => {
 
       if (profile?.id === userId) await checkSession();
     } catch (error: any) {
-      toast.error('Gagal mengubah departemen: ' + error.message);
+      toast.error('Gagal mengubah bagian: ' + error.message);
     } finally {
       setUpdatingUserId(null);
     }
@@ -157,140 +183,86 @@ export const AdminPanel: React.FC = () => {
     }
   };
 
+  const updateCompanyName = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!companyNameInput.trim() || !company?.id) return;
+
+    setIsSavingCompany(true);
+    try {
+      const companyId = profile?.company_id || profile?.companies?.id;
+      if (!companyId) throw new Error("Company ID tidak ditemukan");
+
+      const { error } = await supabase.from('companies').update({ name: companyNameInput.trim() }).eq('id', companyId);
+      if (error) throw error;
+
+      toast.success('Nama organisasi berhasil diperbarui!');
+      
+      // Update local state temporarily, then refresh global session
+      setCompany((prev: any) => ({ ...prev, name: companyNameInput.trim() }));
+      await checkSession();
+    } catch (err: any) {
+      toast.error('Gagal menyimpan nama organisasi: ' + err.message);
+    } finally {
+      setIsSavingCompany(false);
+    }
+  };
+
   if (!profile || profile.role !== 'ADMIN') return <Navigate to="/dashboard" replace />;
 
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-[#F8FAFC] dark:bg-slate-950 font-sans">
+      <div className="flex h-full min-h-[400px] items-center justify-center font-sans">
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-600"></div>
       </div>
     );
   }
 
-  const userName = profile.full_name || profile.name || 'Admin User';
+  const formatTime = (isoString: string) => {
+    return new Date(isoString).toLocaleString('id-ID', {
+      day: 'numeric', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+  };
 
   return (
-    <div className="flex h-screen w-full bg-[#F8FAFC] dark:bg-slate-950 overflow-hidden font-sans">
+    <div className="flex flex-col w-full min-h-full">
       
-      {/* SIDEBAR (Desktop Only) - Lebar disamakan menjadi w-72 */}
-      <div className="hidden md:flex flex-col w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 h-full shrink-0 z-10">
-        <div className="p-6 flex items-center gap-3 border-b border-slate-100 dark:border-slate-800/50">
+      {/* Mobile Header */}
+      <div className="md:hidden flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0 sticky top-0 z-20 shadow-sm">
+        <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0">
             <ShieldCheck className="text-white w-4 h-4" />
           </div>
-          <h1 className="text-lg font-bold text-slate-900 dark:text-white truncate">
-            {company?.name || 'Admin Panel'}
-          </h1>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-4">
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4 px-2">Menu Utama</p>
-          <div className="space-y-1">
-            <button onClick={() => navigate('/dashboard')} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg transition-colors">
-              <LayoutDashboard className="w-4 h-4" /> Dashboard
-            </button>
-            <button className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg transition-colors">
-              <Building className="w-4 h-4" /> Perusahaan
-            </button>
-            <button className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-lg transition-colors">
-              <Building2 className="w-4 h-4" /> Departemen
-            </button>
-            <button className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg transition-colors">
-              <Users className="w-4 h-4" /> Karyawan
-            </button>
-            <button className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg transition-colors">
-              <Settings className="w-4 h-4" /> Pengaturan
-            </button>
-          </div>
-        </div>
-
-        <div className="p-4 border-t border-slate-100 dark:border-slate-800/50 shrink-0">
-          <div className="flex items-center justify-between">
-            {/* Profil Clickable */}
-            <button onClick={() => navigate('/profile')} className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-800/80 rounded-xl transition-colors text-left flex-1 min-w-0">
-              <div className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold text-slate-600 dark:text-slate-300 shrink-0 border border-slate-200 dark:border-slate-700">
-                {userName.charAt(0)}
-              </div>
-              <div className="truncate pr-2 min-w-0">
-                <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{userName}</p>
-                <p className="text-xs text-slate-500 truncate">{profile.role}</p>
-              </div>
-            </button>
-            <button onClick={() => logout()} className="text-red-500 hover:text-red-600 shrink-0 p-2 ml-1 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 rounded-lg transition-colors">
-              <LogOut className="w-4 h-4" />
-            </button>
-          </div>
+          <h1 className="text-lg font-bold text-slate-900 dark:text-white truncate">Admin Panel</h1>
         </div>
       </div>
 
-      {/* MAIN CONTENT */}
-      {/* Tambahkan overflow-x-hidden w-full agar tidak tembus samping di HP */}
-      <div className="flex-1 flex flex-col h-full overflow-y-auto overflow-x-hidden w-full">
-        
-        {/* Mobile Header (Hanya muncul di HP karena sidebar hilang) */}
-        <div className="md:hidden flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0 sticky top-0 z-20 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0">
-              <ShieldCheck className="text-white w-4 h-4" />
-            </div>
-            <h1 className="text-lg font-bold text-slate-900 dark:text-white truncate">Admin Panel</h1>
-          </div>
-          <button onClick={() => navigate('/dashboard')} className="p-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-lg transition-colors">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
+      {/* Desktop Header Area */}
+      <div className="hidden md:flex justify-between items-center p-6 md:p-8 shrink-0">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Admin Panel</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Kelola struktur organisasi dan akses pengguna.</p>
         </div>
+      </div>
 
-        {/* Desktop Header Area */}
-        <div className="hidden md:flex justify-between items-center p-6 md:p-8 shrink-0">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Admin Panel</h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Kelola struktur perusahaan dan akses karyawan.</p>
-          </div>
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 px-4 py-2 rounded-lg transition-colors shadow-sm"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="hidden sm:inline">Kembali</span>
-          </button>
-        </div>
-
-        {/* Banner Kode Undangan */}
-        <div className="m-4 md:mx-8 md:mb-6 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/50 rounded-2xl p-4 md:p-8 text-center relative overflow-hidden shrink-0 shadow-sm">
-          <div className="relative z-10 flex flex-col items-center justify-center">
-            <h2 className="text-xs md:text-sm font-semibold text-indigo-900/60 dark:text-indigo-400/80 uppercase tracking-widest mb-3 md:mb-4">Kode Undangan Perusahaan</h2>
-            <div className="bg-white dark:bg-slate-900 px-4 py-3 md:px-10 md:py-5 rounded-xl border border-indigo-100 dark:border-indigo-800 shadow-sm mb-3 md:mb-4 w-full md:w-auto inline-flex justify-center overflow-hidden">
-              {/* Tambahkan break-all agar kode panjang tidak merusak box di HP */}
-              <span className="tracking-[0.2em] md:tracking-[0.5em] text-2xl md:text-4xl text-indigo-600 dark:text-indigo-400 font-bold font-mono md:ml-2 break-all text-center">
-                {company?.invite_code || 'TIDAK TERSEDIA'}
-              </span>
-            </div>
-            <p className="text-xs md:text-sm text-indigo-700/80 dark:text-indigo-300/80 max-w-md mx-auto leading-relaxed px-2">
-              Berikan kode ini kepada karyawan Anda agar mereka bisa bergabung ke perusahaan <strong className="font-semibold text-indigo-900 dark:text-indigo-100">{company?.name}</strong>.
-            </p>
-          </div>
-        </div>
-
-        {/* Grid Departemen & Karyawan */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 px-4 md:px-8 pb-8 items-start">
-          
-          {/* Card Departemen */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 md:p-6 shadow-sm flex flex-col h-full min-h-[400px]">
+      {activeTab === 'bagian' ? (
+        <div className="px-4 md:px-8 pb-8">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 md:p-6 shadow-sm flex flex-col min-h-[400px]">
             <div className="flex items-center gap-3 mb-6 shrink-0">
               <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg">
                 <Building2 className="w-5 h-5" />
               </div>
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Departemen</h2>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Daftar Bagian</h2>
             </div>
             
             <form onSubmit={handleAddDepartment} className="flex gap-2 md:gap-3 mb-6 shrink-0">
               <input
                 type="text"
-                placeholder="Nama departemen baru"
+                placeholder="Nama bagian baru"
                 value={newDeptName}
                 onChange={(e) => setNewDeptName(e.target.value)}
                 required
-                className="flex-1 px-3 md:px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm transition-all min-w-0"
+                className="flex-1 px-3 md:px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm transition-all min-w-0 max-w-md"
               />
               <button
                 type="submit"
@@ -301,7 +273,7 @@ export const AdminPanel: React.FC = () => {
               </button>
             </form>
 
-            <div className="flex-1 overflow-y-auto max-h-[300px] border border-slate-100 dark:border-slate-800 rounded-xl mb-6 bg-slate-50/50 dark:bg-slate-800/20">
+            <div className="flex-1 overflow-y-auto max-h-[500px] border border-slate-100 dark:border-slate-800 rounded-xl mb-6 bg-slate-50/50 dark:bg-slate-800/20">
               <ul className="divide-y divide-slate-100 dark:divide-slate-800/50">
                 {departments.map(dept => {
                   const empCount = employees.filter(e => e.department_id === dept.id).length;
@@ -309,83 +281,227 @@ export const AdminPanel: React.FC = () => {
                     <li key={dept.id} className="p-3 md:p-4 flex justify-between items-center hover:bg-white dark:hover:bg-slate-800 transition-colors group gap-2">
                       <span className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">{dept.name}</span>
                       <span className="text-[10px] md:text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 px-2 md:px-3 py-1.5 rounded-full font-medium shadow-sm group-hover:border-indigo-200 dark:group-hover:border-indigo-800 transition-colors shrink-0 whitespace-nowrap">
-                        {empCount} Karyawan
+                        {empCount} Pengguna
                       </span>
                     </li>
                   );
                 })}
                 {departments.length === 0 && (
-                  <li className="p-8 text-center text-sm text-slate-500 font-medium">Belum ada departemen.</li>
+                  <li className="p-8 text-center text-sm text-slate-500 font-medium">Belum ada bagian.</li>
                 )}
               </ul>
             </div>
             
             <div className="mt-auto bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/30 p-3 md:p-4 rounded-xl flex items-center justify-between shrink-0">
-              <span className="text-xs md:text-sm font-semibold text-emerald-800 dark:text-emerald-400">Total Departemen</span>
+              <span className="text-xs md:text-sm font-semibold text-emerald-800 dark:text-emerald-400">Total Bagian</span>
               <span className="text-lg md:text-xl font-bold text-emerald-600 dark:text-emerald-300">{departments.length}</span>
             </div>
           </div>
-
-          {/* Card Karyawan */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 md:p-6 shadow-sm flex flex-col h-full min-h-[400px]">
-            <div className="flex items-center gap-3 mb-6 shrink-0">
-              <div className="p-2 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-lg">
-                <Users className="w-5 h-5" />
+        </div>
+      ) : activeTab === 'pengguna' ? (
+        <>
+          {/* Banner Kode Undangan */}
+          <div className="m-4 md:mx-8 md:mb-6 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/50 rounded-2xl p-4 md:p-8 text-center relative overflow-hidden shrink-0 shadow-sm">
+            <div className="relative z-10 flex flex-col items-center justify-center">
+              <h2 className="text-xs md:text-sm font-semibold text-indigo-900/60 dark:text-indigo-400/80 uppercase tracking-widest mb-3 md:mb-4">Kode Undangan Organisasi</h2>
+              <div className="bg-white dark:bg-slate-900 px-4 py-3 md:px-10 md:py-5 rounded-xl border border-indigo-100 dark:border-indigo-800 shadow-sm mb-3 md:mb-4 w-full md:w-auto inline-flex justify-center overflow-hidden">
+                <span className="tracking-[0.2em] md:tracking-[0.5em] text-2xl md:text-4xl text-indigo-600 dark:text-indigo-400 font-bold font-mono md:ml-2 break-all text-center">
+                  {company?.invite_code || 'TIDAK TERSEDIA'}
+                </span>
               </div>
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Daftar Karyawan</h2>
-            </div>
-
-            <div className="flex-1 overflow-y-auto max-h-[365px] border border-slate-100 dark:border-slate-800 rounded-xl mb-6 bg-slate-50/50 dark:bg-slate-800/20">
-              <ul className="divide-y divide-slate-100 dark:divide-slate-800/50">
-                {employees.map(emp => (
-                  <li key={emp.id} className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 p-3 md:p-4 hover:bg-white dark:hover:bg-slate-800 transition-colors">
-                    <div className="flex items-center gap-3 min-w-0 mb-1 xl:mb-0">
-                      <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center font-bold text-sm shrink-0 border border-slate-300 dark:border-slate-600">
-                        {emp.full_name?.charAt(0) || '?'}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{emp.full_name}</p>
-                        <p className="text-[10px] md:text-xs text-slate-500 truncate mt-0.5">{emp.user_id_login}</p>
-                      </div>
-                    </div>
-                    
-                    {/* Dropdown Wrappers full-width on mobile, auto on desktop */}
-                    <div className="flex flex-col sm:flex-row gap-2 w-full xl:w-auto shrink-0">
-                      <div className="w-full sm:w-1/2 xl:w-36">
-                        <CustomDropdown
-                          options={ROLE_OPTIONS}
-                          value={emp.role || ''}
-                          onChange={(newRole) => updateEmployeeRole(emp.id, newRole)}
-                          isLoading={updatingUserId === emp.id}
-                          placeholder="Jabatan"
-                        />
-                      </div>
-                      <div className="w-full sm:w-1/2 xl:w-40">
-                        <CustomDropdown
-                          options={departments.map(d => ({ id: d.id, name: d.name }))}
-                          value={emp.department_id || ''}
-                          onChange={(newDeptId) => updateEmployeeDepartment(emp.id, newDeptId)}
-                          isLoading={updatingUserId === emp.id}
-                          placeholder="Departemen"
-                        />
-                      </div>
-                    </div>
-                  </li>
-                ))}
-                {employees.length === 0 && (
-                  <li className="p-8 text-center text-sm text-slate-500 font-medium">Belum ada karyawan.</li>
-                )}
-              </ul>
-            </div>
-            
-            <div className="mt-auto bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/30 p-3 md:p-4 rounded-xl flex items-center justify-between shrink-0">
-              <span className="text-xs md:text-sm font-semibold text-indigo-800 dark:text-indigo-400">Total Karyawan</span>
-              <span className="text-lg md:text-xl font-bold text-indigo-600 dark:text-indigo-300">{employees.length}</span>
+              <p className="text-xs md:text-sm text-indigo-700/80 dark:text-indigo-300/80 max-w-md mx-auto leading-relaxed px-2">
+                Berikan kode ini kepada pengguna Anda agar mereka bisa bergabung ke organisasi <strong className="font-semibold text-indigo-900 dark:text-indigo-100">{company?.name}</strong>.
+              </p>
             </div>
           </div>
-          
+
+          <div className="px-4 md:px-8 pb-8">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 md:p-6 shadow-sm flex flex-col min-h-[400px]">
+              <div className="flex items-center gap-3 mb-6 shrink-0">
+                <div className="p-2 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-lg">
+                  <Users className="w-5 h-5" />
+                </div>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Daftar Pengguna</h2>
+              </div>
+
+              <div className="flex-1 overflow-y-auto max-h-[500px] mb-6 space-y-4 pr-1">
+                {(() => {
+                  const renderEmployeeRow = (emp: any) => (
+                    <div key={emp.id} className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 p-3 md:p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                      <div className="flex items-center gap-3 min-w-0 mb-1 xl:mb-0">
+                        <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center font-bold text-sm shrink-0 border border-slate-300 dark:border-slate-600">
+                          {emp.full_name?.charAt(0) || '?'}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{emp.full_name}</p>
+                          <p className="text-[10px] md:text-xs text-slate-500 truncate mt-0.5">{emp.user_id_login}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-col sm:flex-row gap-2 w-full xl:w-auto shrink-0">
+                        <div className="w-full sm:w-1/2 xl:w-36">
+                          <CustomDropdown
+                            options={ROLE_OPTIONS}
+                            value={emp.role || ''}
+                            onChange={(newRole) => updateEmployeeRole(emp.id, newRole)}
+                            isLoading={updatingUserId === emp.id}
+                            placeholder="Jabatan"
+                          />
+                        </div>
+                        <div className="w-full sm:w-1/2 xl:w-40">
+                          <CustomDropdown
+                            options={departments.map(d => ({ id: d.id, name: d.name }))}
+                            value={emp.department_id || ''}
+                            onChange={(newDeptId) => updateEmployeeDepartment(emp.id, newDeptId)}
+                            isLoading={updatingUserId === emp.id}
+                            placeholder="Bagian"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+
+                  const unassigned = employees.filter(e => !e.department_id);
+                  
+                  return (
+                    <>
+                      {unassigned.length > 0 && (
+                        <div className="border border-red-200 dark:border-red-900/50 rounded-xl overflow-hidden mb-4 shadow-sm">
+                          <div className="bg-red-50 dark:bg-red-900/20 px-4 py-3 border-b border-red-200 dark:border-red-900/50 flex justify-between items-center text-red-600 dark:text-red-400">
+                            <span className="font-semibold text-sm">Tanpa Bagian</span>
+                            <span className="text-xs bg-red-100 dark:bg-red-900/40 px-2 py-1 rounded-full font-medium">{unassigned.length} Pengguna</span>
+                          </div>
+                          <div className="divide-y divide-slate-100 dark:divide-slate-800/50 bg-white dark:bg-slate-900">
+                            {unassigned.map(renderEmployeeRow)}
+                          </div>
+                        </div>
+                      )}
+
+                      {departments.map(dept => {
+                        const deptEmployees = employees.filter(e => e.department_id === dept.id);
+                        return (
+                          <div key={dept.id} className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm">
+                            <div className="bg-slate-50 dark:bg-slate-800/50 px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                              <span className="font-semibold text-sm text-slate-800 dark:text-slate-200">{dept.name}</span>
+                              <span className="text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 px-2 py-1 rounded-full font-medium">{deptEmployees.length} Pengguna</span>
+                            </div>
+                            <div className="divide-y divide-slate-100 dark:divide-slate-800/50 bg-white dark:bg-slate-900">
+                              {deptEmployees.length === 0 ? (
+                                <div className="p-4 text-center text-sm text-slate-500">Belum ada pengguna di bagian ini.</div>
+                              ) : (
+                                deptEmployees.map(renderEmployeeRow)
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                      {departments.length === 0 && employees.length === 0 && (
+                        <div className="p-8 text-center text-sm text-slate-500 font-medium border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-800/20 shadow-sm">
+                          Belum ada pengguna.
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+              
+              <div className="mt-auto bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/30 p-3 md:p-4 rounded-xl flex items-center justify-between shrink-0">
+                <span className="text-xs md:text-sm font-semibold text-indigo-800 dark:text-indigo-400">Total Pengguna</span>
+                <span className="text-lg md:text-xl font-bold text-indigo-600 dark:text-indigo-300">{employees.length}</span>
+              </div>
+            </div>
+          </div>
+        </>
+      ) : activeTab === 'aktivitas' ? (
+        <div className="px-4 md:px-8 pb-8">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 md:p-8 shadow-sm flex flex-col">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg">
+                <Clock className="w-5 h-5" />
+              </div>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Riwayat Aktivitas Penyiaran</h2>
+            </div>
+
+            <div className="relative border-l-2 border-slate-200 dark:border-slate-700 ml-3 md:ml-4 pb-4">
+              {recentActivity.map((activity, index) => (
+                <div key={activity.id} className={`mb-8 ml-6 relative ${index === recentActivity.length - 1 ? 'mb-0' : ''}`}>
+                  <span className="absolute flex items-center justify-center w-3 h-3 bg-blue-500 rounded-full -left-[31px] md:-left-[33px] ring-4 ring-white dark:ring-slate-900 mt-1.5"></span>
+                  <div className="flex flex-col">
+                    <p className="text-sm text-slate-800 dark:text-slate-200">
+                      <span className="font-semibold text-slate-900 dark:text-white">{activity.profiles?.full_name || 'Pengguna Tidak Diketahui'}</span> mengirim pengumuman 
+                      <span className={`ml-1 font-semibold ${
+                        activity.type === 'URGENT' ? 'text-red-500' : 
+                        activity.type === 'TASK' ? 'text-green-500' : 
+                        'text-blue-500'
+                      }`}>
+                        {activity.type}
+                      </span>
+                    </p>
+                    <time className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">{formatTime(activity.created_at)}</time>
+                  </div>
+                </div>
+              ))}
+              {recentActivity.length === 0 && (
+                <div className="ml-6 py-4">
+                  <p className="text-sm text-slate-500 italic">Belum ada aktivitas penyiaran di organisasi ini.</p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
+      ) : activeTab === 'pengaturan' ? (
+        <div className="px-4 md:px-8 pb-8">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 md:p-8 shadow-sm flex flex-col max-w-3xl">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg">
+                <Settings className="w-5 h-5" />
+              </div>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Pengaturan Organisasi</h2>
+            </div>
+            
+            <form onSubmit={updateCompanyName} className="flex flex-col gap-6 mt-2">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Nama Organisasi</label>
+                <input
+                  type="text"
+                  value={companyNameInput}
+                  onChange={(e) => setCompanyNameInput(e.target.value)}
+                  placeholder="Masukkan nama organisasi"
+                  required
+                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white transition-all shadow-sm"
+                />
+              </div>
+              
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+                <button
+                  type="submit"
+                  disabled={isSavingCompany || companyNameInput.trim() === company?.name}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm flex items-center justify-center min-w-[160px]"
+                >
+                  {isSavingCompany ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Menyimpan...
+                    </>
+                  ) : (
+                    'Simpan Perubahan'
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : (
+        <div className="flex-1 flex flex-col items-center justify-center text-slate-400 h-full p-4">
+          <Settings size={48} className="mb-4 opacity-20" />
+          <h2 className="text-xl font-semibold text-slate-600 dark:text-slate-300 text-center">Fitur {ADMIN_MENUS.find(m => m.id === activeTab)?.label}</h2>
+          <p className="text-sm mt-2 text-center">Modul ini sedang dalam tahap pengembangan.</p>
+        </div>
+      )}
     </div>
   );
 };
