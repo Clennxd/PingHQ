@@ -110,10 +110,7 @@ export const AdminPanel: React.FC = () => {
     fetchData();
   }, [profile, navigate]);
 
-  const handleAddDepartment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newDeptName.trim() || !company?.id) return;
-    
+  const addDepartment = async () => {
     setIsAddingDept(true);
     try {
       const { data, error } = await supabase
@@ -132,6 +129,23 @@ export const AdminPanel: React.FC = () => {
     } finally {
       setIsAddingDept(false);
     }
+  };
+
+  const handleAddDeptSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newDeptName.trim() || !company?.id) return;
+    
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Tambah Bagian Baru',
+      message: `Apakah Anda yakin ingin menambahkan bagian "${newDeptName.trim()}" ke dalam organisasi?`,
+      confirmText: 'Tambah Bagian',
+      isDanger: false,
+      onConfirm: async () => {
+        setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+        await addDepartment();
+      }
+    });
   };
 
   const updateEmployeeDepartment = async (userId: string, newDeptId: string) => {
@@ -189,10 +203,7 @@ export const AdminPanel: React.FC = () => {
     }
   };
 
-  const updateCompanyName = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!companyNameInput.trim() || !company?.id) return;
-
+  const updateCompanyName = async () => {
     setIsSavingCompany(true);
     try {
       const companyId = profile?.company_id || profile?.companies?.id;
@@ -211,6 +222,23 @@ export const AdminPanel: React.FC = () => {
     } finally {
       setIsSavingCompany(false);
     }
+  };
+
+  const handleCompanyNameSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!companyNameInput.trim() || !company?.id) return;
+    
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Ubah Nama Organisasi',
+      message: `Apakah Anda yakin ingin mengubah nama organisasi menjadi "${companyNameInput.trim()}"?`,
+      confirmText: 'Simpan Perubahan',
+      isDanger: false,
+      onConfirm: async () => {
+        setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+        await updateCompanyName();
+      }
+    });
   };
 
   const regenerateInviteCode = async () => {
@@ -337,16 +365,12 @@ export const AdminPanel: React.FC = () => {
           </div>
 
           {/* Pengaturan Nama Organisasi */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 md:p-8 shadow-sm flex flex-col">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg">
-                <Building className="w-5 h-5" />
-              </div>
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Identitas Organisasi</h2>
-            </div>
-            
-            <form onSubmit={updateCompanyName} className="flex flex-col gap-6 mt-2 max-w-3xl">
-              <div>
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
+            <div className="p-6">
+              <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Profil Organisasi</h3>
+              <p className="text-sm text-slate-500 mt-1 mb-4">Nama ini akan ditampilkan kepada seluruh anggota saat mereka bergabung.</p>
+              
+              <form id="update-company-form" onSubmit={handleCompanyNameSubmit} className="flex flex-col">
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Nama Organisasi</label>
                 <input
                   type="text"
@@ -354,61 +378,72 @@ export const AdminPanel: React.FC = () => {
                   onChange={(e) => setCompanyNameInput(e.target.value)}
                   placeholder="Masukkan nama organisasi"
                   required
-                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white transition-all shadow-sm"
+                  className="w-full max-w-md px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-slate-900 dark:text-white"
                 />
-              </div>
-              
-              <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-start">
-                <button
-                  type="submit"
-                  disabled={isSavingCompany || companyNameInput.trim() === company?.name}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm flex items-center justify-center min-w-[160px]"
-                >
-                  {isSavingCompany ? (
-                    <>
-                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Menyimpan...
-                    </>
-                  ) : (
-                    'Simpan Perubahan'
-                  )}
-                </button>
-              </div>
-            </form>
+              </form>
+            </div>
+            <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex justify-start">
+              <button
+                type="submit"
+                form="update-company-form"
+                disabled={isSavingCompany || companyNameInput.trim() === company?.name}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm flex items-center justify-center min-w-[160px]"
+              >
+                {isSavingCompany ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Menyimpan...
+                  </>
+                ) : (
+                  'Simpan Perubahan'
+                )}
+              </button>
+            </div>
           </div>
         </div>
       ) : activeTab === 'bagian' ? (
         <div className="px-4 md:px-8 pb-8">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 md:p-6 shadow-sm flex flex-col min-h-[400px]">
-            <div className="flex items-center gap-3 mb-6 shrink-0">
-              <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg">
-                <Building2 className="w-5 h-5" />
+          <div className="flex flex-col gap-6">
+            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
+              <div className="p-6">
+                <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Tambah Bagian Baru</h3>
+                <p className="text-sm text-slate-500 mt-1 mb-4">Buat bagian/departemen baru untuk mengelompokkan pengguna Anda.</p>
+                <form id="add-dept-form" onSubmit={handleAddDeptSubmit} className="flex flex-col">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Nama Bagian</label>
+                  <input
+                    type="text"
+                    value={newDeptName}
+                    onChange={(e) => setNewDeptName(e.target.value)}
+                    placeholder="Contoh: IT Support, Marketing, HRD"
+                    required
+                    className="w-full max-w-md px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-slate-900 dark:text-white"
+                  />
+                </form>
               </div>
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Daftar Bagian</h2>
+              <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex justify-start">
+                <button
+                  type="submit"
+                  form="add-dept-form"
+                  disabled={isAddingDept || !newDeptName.trim()}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 shadow-sm flex items-center justify-center min-w-[160px]"
+                >
+                  {isAddingDept ? 'Menambahkan...' : 'Tambah Bagian'}
+                </button>
+              </div>
             </div>
-            
-            <form onSubmit={handleAddDepartment} className="flex gap-2 md:gap-3 mb-6 shrink-0">
-              <input
-                type="text"
-                placeholder="Nama bagian baru"
-                value={newDeptName}
-                onChange={(e) => setNewDeptName(e.target.value)}
-                required
-                className="flex-1 px-3 md:px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm transition-all min-w-0 max-w-md"
-              />
-              <button
-                type="submit"
-                disabled={isAddingDept}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 md:px-5 py-2.5 rounded-xl flex items-center justify-center text-sm font-semibold transition-colors disabled:opacity-70 shadow-sm shrink-0"
-              >
-                <Plus className="w-4 h-4 sm:mr-1.5" /> <span className="hidden sm:inline">Tambah</span>
-              </button>
-            </form>
 
-            <div className="flex-1 overflow-y-auto max-h-[500px] border border-slate-100 dark:border-slate-800 rounded-xl mb-6 bg-slate-50/50 dark:bg-slate-800/20">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 md:p-6 shadow-sm flex flex-col min-h-[400px]">
+              <div className="flex items-center gap-3 mb-6 shrink-0">
+                <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg">
+                  <Building2 className="w-5 h-5" />
+                </div>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Daftar Bagian</h2>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto max-h-[500px] border border-slate-100 dark:border-slate-800 rounded-xl mb-6 bg-slate-50/50 dark:bg-slate-800/20">
               <ul className="divide-y divide-slate-100 dark:divide-slate-800/50">
                 {departments.map(dept => {
                   const empCount = employees.filter(e => e.department_id === dept.id).length;
@@ -433,6 +468,7 @@ export const AdminPanel: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
       ) : activeTab === 'pengguna' ? (
         <>
           <div className="px-4 md:px-8 pb-8">
