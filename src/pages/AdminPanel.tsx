@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { Building, Building2, Users, Plus, LayoutDashboard, Settings, ShieldCheck, Clock, RefreshCw, UserX } from 'lucide-react';
 import { toast } from 'sonner';
 import { CustomDropdown } from '../components/CustomDropdown';
+import { ConfirmModal } from '../components/ConfirmModal';
 
 const ADMIN_MENUS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -40,6 +41,9 @@ export const AdminPanel: React.FC = () => {
   const [isAddingDept, setIsAddingDept] = useState(false);
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
   const [isResettingCode, setIsResettingCode] = useState(false);
+  const [confirmConfig, setConfirmConfig] = useState({
+    isOpen: false, title: '', message: '', confirmText: '', isDanger: false, onConfirm: () => {}
+  });
 
   const [companyNameInput, setCompanyNameInput] = useState(profile?.companies?.name || '');
   const [isSavingCompany, setIsSavingCompany] = useState(false);
@@ -210,31 +214,51 @@ export const AdminPanel: React.FC = () => {
   };
 
   const regenerateInviteCode = async () => {
-    if (!confirm('Apakah Anda yakin ingin mengganti kode undangan? Kode lama tidak akan bisa digunakan lagi.')) return;
-    setIsResettingCode(true);
-    try {
-      const newCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-      const { error } = await supabase.from('companies').update({ invite_code: newCode }).eq('id', profile.company_id);
-      if (error) throw error;
-      toast.success('Kode undangan berhasil diperbarui!');
-      window.location.reload();
-    } catch (err: any) {
-      toast.error(err.message);
-    } finally {
-      setIsResettingCode(false);
-    }
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Perbarui Kode Undangan',
+      message: 'Apakah Anda yakin ingin mengganti kode undangan? Kode lama tidak akan bisa digunakan lagi.',
+      confirmText: 'Perbarui Kode',
+      isDanger: false,
+      onConfirm: async () => {
+        setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+        setIsResettingCode(true);
+        try {
+          const newCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+          const { error } = await supabase.from('companies').update({ invite_code: newCode }).eq('id', profile.company_id);
+          if (error) throw error;
+          
+          setCompany((prev: any) => ({ ...prev, invite_code: newCode }));
+          await checkSession();
+          toast.success('Kode undangan berhasil diperbarui!');
+        } catch (err: any) {
+          toast.error(err.message);
+        } finally {
+          setIsResettingCode(false);
+        }
+      }
+    });
   };
 
   const kickUser = async (userId: string, userName: string) => {
-    if (!confirm(`TENDANG PENGGUNA: Apakah Anda yakin ingin mengeluarkan ${userName} dari organisasi ini?`)) return;
-    try {
-      const { error } = await supabase.from('profiles').update({ company_id: null, department_id: null, role: 'STAFF' }).eq('id', userId);
-      if (error) throw error;
-      toast.success(`${userName} berhasil dikeluarkan dari organisasi.`);
-      setEmployees(prev => prev.filter(p => p.id !== userId));
-    } catch (err: any) {
-      toast.error(err.message);
-    }
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Keluarkan Pengguna',
+      message: `Apakah Anda yakin ingin mengeluarkan ${userName} dari organisasi ini?`,
+      confirmText: 'Keluarkan',
+      isDanger: true,
+      onConfirm: async () => {
+        setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+        try {
+          const { error } = await supabase.from('profiles').update({ company_id: null, department_id: null, role: 'STAFF' }).eq('id', userId);
+          if (error) throw error;
+          toast.success(`${userName} berhasil dikeluarkan dari organisasi.`);
+          setEmployees(prev => prev.filter(p => p.id !== userId));
+        } catch (err: any) {
+          toast.error(err.message);
+        }
+      }
+    });
   };
 
   if (!profile || profile.role !== 'ADMIN') return <Navigate to="/dashboard" replace />;
@@ -284,19 +308,27 @@ export const AdminPanel: React.FC = () => {
                 <h2 className="text-xs md:text-sm font-semibold text-indigo-900/60 dark:text-indigo-400/80 uppercase tracking-widest">Kode Undangan Organisasi</h2>
               </div>
               <div className="bg-white dark:bg-slate-900 px-4 py-3 md:px-10 md:py-5 rounded-xl border border-indigo-100 dark:border-indigo-800 shadow-sm mb-3 md:mb-4 w-full md:w-auto inline-flex flex-col items-center justify-center overflow-hidden gap-3">
-                <span className="tracking-[0.2em] md:tracking-[0.5em] text-2xl md:text-4xl text-indigo-600 dark:text-indigo-400 font-bold font-mono break-all text-center">
-                  {company?.invite_code || 'TIDAK TERSEDIA'}
-                </span>
-                {company?.invite_code && (
-                  <button 
-                    onClick={regenerateInviteCode}
-                    disabled={isResettingCode}
-                    className="flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 transition-colors bg-slate-100 hover:bg-indigo-50 dark:bg-slate-800 dark:hover:bg-indigo-900/30 px-3 py-1.5 rounded-full disabled:opacity-50"
-                  >
-                    <RefreshCw className={`w-3.5 h-3.5 ${isResettingCode ? 'animate-spin' : ''}`} />
-                    {isResettingCode ? 'Memperbarui...' : 'Perbarui Kode'}
-                  </button>
+                {company?.invite_code ? (
+                  <span className="tracking-[0.2em] md:tracking-[0.5em] text-2xl md:text-4xl text-indigo-600 dark:text-indigo-400 font-bold font-mono break-all text-center">
+                    {company.invite_code}
+                  </span>
+                ) : (
+                  <span className="text-lg md:text-xl text-slate-400 dark:text-slate-500 font-semibold font-mono text-center">
+                    KODE BELUM DIBUAT
+                  </span>
                 )}
+                <button 
+                  onClick={regenerateInviteCode}
+                  disabled={isResettingCode}
+                  className="flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 transition-colors bg-slate-100 hover:bg-indigo-50 dark:bg-slate-800 dark:hover:bg-indigo-900/30 px-3 py-1.5 rounded-full disabled:opacity-50"
+                >
+                  <RefreshCw size={16} className={isResettingCode ? 'animate-spin' : ''} />
+                  <span>
+                    {isResettingCode 
+                      ? (company?.invite_code ? 'Memperbarui...' : 'Membuat...') 
+                      : (company?.invite_code ? 'Perbarui Kode' : 'Buat Kode Sekarang')}
+                  </span>
+                </button>
               </div>
               <p className="text-xs md:text-sm text-indigo-700/80 dark:text-indigo-300/80 max-w-md mx-auto leading-relaxed px-2">
                 Berikan kode ini kepada pengguna Anda agar mereka bisa bergabung ke organisasi <strong className="font-semibold text-indigo-900 dark:text-indigo-100">{company?.name}</strong>.
@@ -560,6 +592,11 @@ export const AdminPanel: React.FC = () => {
           <p className="text-sm mt-2 text-center">Modul ini sedang dalam tahap pengembangan.</p>
         </div>
       )}
+
+      <ConfirmModal 
+        {...confirmConfig} 
+        onClose={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))} 
+      />
     </div>
   );
 };
