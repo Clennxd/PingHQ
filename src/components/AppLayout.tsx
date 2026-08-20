@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { CreateMemoModal } from './CreateMemoModal';
-import { LayoutDashboard, Building2, Users, LogOut, Radio, Plus, Clock, Settings, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Building, Building2, Users, LogOut, Radio, Plus, Clock, Settings, Menu, X } from 'lucide-react';
 
 export const AppLayout: React.FC = () => {
   const { profile, logout } = useAuthStore();
@@ -81,6 +81,16 @@ export const AppLayout: React.FC = () => {
             <div>
               <div className="px-4 mt-6 mb-2 text-xs font-bold text-slate-400 uppercase tracking-wider">Admin Panel</div>
               <div className="space-y-1">
+                <Link 
+                  to="/admin?tab=organisasi"
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-colors ${
+                    isActive('/admin', 'organisasi') 
+                      ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-semibold' 
+                      : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium'
+                  }`}
+                >
+                  <Building className="w-5 h-5" /> Organisasi
+                </Link>
                 <Link 
                   to="/admin?tab=bagian"
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-colors ${
