@@ -18,8 +18,8 @@ interface MemoState {
   isLoading: boolean;
   error: string | null;
   subscription: any;
-  fetchMemos: (companyId: string, departmentId: string | null) => Promise<void>;
-  subscribeToMemos: (companyId: string, departmentId: string | null) => void;
+  fetchMemos: (companyId: string, departmentId: string | null, userId: string) => Promise<void>;
+  subscribeToMemos: (companyId: string, departmentId: string | null, userId: string) => void;
   unsubscribeMemos: () => void;
   createMemo: (payload: { company_id: string, department_id: string | null, sender_id: string, message: string, type: string }) => Promise<{ success: boolean; error?: string }>;
   markMemoAsRead: (memoId: string, userId: string) => Promise<void>;
@@ -71,14 +71,19 @@ export const useMemoStore = create<MemoState>((set, get) => ({
     }
   },
 
-  fetchMemos: async (companyId, departmentId) => {
+  fetchMemos: async (companyId, departmentId, userId) => {
     set({ isLoading: true, error: null });
     try {
+      let orQuery = `department_id.is.null,sender_id.eq.${userId}`;
+      if (departmentId) {
+        orQuery += `,department_id.eq.${departmentId}`;
+      }
+
       const { data, error } = await supabase
         .from('memos')
         .select('*, profiles(full_name)')
         .eq('company_id', companyId)
-        .or(`department_id.is.null,department_id.eq.${departmentId}`)
+        .or(orQuery)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -90,7 +95,7 @@ export const useMemoStore = create<MemoState>((set, get) => ({
     }
   },
 
-  subscribeToMemos: (companyId, departmentId) => {
+  subscribeToMemos: (companyId, departmentId, userId) => {
     // Prevent multiple subscriptions
     if (get().subscription) {
       get().unsubscribeMemos();
@@ -104,8 +109,12 @@ export const useMemoStore = create<MemoState>((set, get) => ({
           const newMemo = payload.new as Memo;
           
           // Check if it belongs to this company and department
-          if (newMemo.company_id === companyId && 
-              (newMemo.department_id === departmentId || newMemo.department_id === null)) {
+          if (
+            newMemo.company_id === companyId && 
+            (newMemo.department_id === null || 
+             newMemo.department_id === departmentId || 
+             newMemo.sender_id === userId)
+          ) {
             
             // Play notification sound
             const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg'); 

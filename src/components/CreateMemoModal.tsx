@@ -34,7 +34,7 @@ export const CreateMemoModal: React.FC<CreateMemoModalProps> = ({ isOpen, onClos
     setType('INFO');
 
     const fetchDepartments = async () => {
-      if (profile.role === 'ADMIN' && profile.company_id) {
+      if (profile.role === 'SUPER_ADMIN' && profile.company_id) {
         try {
           const { data, error } = await supabase
             .from('departments')
@@ -57,7 +57,7 @@ export const CreateMemoModal: React.FC<CreateMemoModalProps> = ({ isOpen, onClos
   // Derived options based on role
   const targetOptions: TargetOption[] = useMemo(() => {
     const options: TargetOption[] = [];
-    if (profile.role === 'ADMIN') {
+    if (profile.role === 'SUPER_ADMIN') {
       options.push({ value: 'ALL', label: 'Seluruh Organisasi' });
       departments.forEach(dept => {
         options.push({ value: dept.id, label: `Bagian: ${dept.name}` });
@@ -67,7 +67,7 @@ export const CreateMemoModal: React.FC<CreateMemoModalProps> = ({ isOpen, onClos
       if (profile.department_id) {
         options.push({ value: profile.department_id, label: 'Bagian Internal' });
       }
-    } else if (profile.role === 'STAFF') {
+    } else if (profile.role === 'STAFF' || profile.role === 'ADMIN') {
       if (profile.department_id) {
         options.push({ value: profile.department_id, label: 'Bagian Internal' });
       }

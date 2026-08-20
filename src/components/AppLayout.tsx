@@ -77,7 +77,7 @@ export const AppLayout: React.FC = () => {
             </div>
           </div>
 
-          {profile?.role === 'ADMIN' && (
+          {profile?.role === 'SUPER_ADMIN' && (
             <div>
               <div className="px-4 mt-6 mb-2 text-xs font-bold text-slate-400 uppercase tracking-wider">Admin Panel</div>
               <div className="space-y-1">
@@ -145,7 +145,7 @@ export const AppLayout: React.FC = () => {
               </div>
               <div className="truncate pr-2 min-w-0">
                 <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{userName}</p>
-                <p className="text-xs text-slate-500 truncate">{profile?.role}</p>
+                <p className="text-xs text-slate-500 truncate">{profile?.role?.replace('_', ' ')}</p>
               </div>
             </button>
             <button onClick={() => logout()} className="text-red-500 hover:text-red-600 shrink-0 p-2 ml-1 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 rounded-lg transition-colors">

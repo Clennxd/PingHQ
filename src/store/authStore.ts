@@ -6,7 +6,7 @@ export interface Profile {
   id: string;
   user_id: string;
   name: string;
-  role: 'ADMIN' | 'MANAGER' | 'SENIOR_SPV' | 'SPV' | 'STAFF';
+  role: 'SUPER_ADMIN' | 'ADMIN' | 'MANAGER' | 'SENIOR_SPV' | 'SPV' | 'STAFF';
   companies?: any;
   departments?: any;
   [key: string]: any;
@@ -111,7 +111,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         company_id: company.id,
         department_id: dept.id,
         full_name: fullName,
-        role: 'ADMIN'
+        role: 'SUPER_ADMIN'
       });
       if (profileError) throw new Error("Profile Error: " + profileError.message);
       

@@ -32,8 +32,8 @@ export const Dashboard: React.FC = () => {
       const departmentId = profile.department_id || profile.departments?.id || null;
       
       if (companyId) {
-        fetchMemos(companyId, departmentId);
-        subscribeToMemos(companyId, departmentId);
+        fetchMemos(companyId, departmentId, profile.id);
+        subscribeToMemos(companyId, departmentId, profile.id);
       }
     }
     return () => {

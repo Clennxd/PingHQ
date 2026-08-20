@@ -17,10 +17,11 @@ const ADMIN_MENUS = [
 ];
 
 const ROLE_OPTIONS = [
-  {id: 'ADMIN', name: 'Admin'},
+  {id: 'SUPER_ADMIN', name: 'Super Admin'},
   {id: 'MANAGER', name: 'Manager'},
   {id: 'SENIOR_SPV', name: 'Senior SPV'},
   {id: 'SPV', name: 'SPV'},
+  {id: 'ADMIN', name: 'Admin'},
   {id: 'STAFF', name: 'Staff'}
 ];
 
@@ -51,7 +52,7 @@ export const AdminPanel: React.FC = () => {
   useEffect(() => {
     if (!profile) return;
     
-    if (profile.role !== 'ADMIN') {
+    if (profile.role !== 'SUPER_ADMIN') {
       navigate('/dashboard', { replace: true });
       return;
     }
@@ -289,7 +290,7 @@ export const AdminPanel: React.FC = () => {
     });
   };
 
-  if (!profile || profile.role !== 'ADMIN') return <Navigate to="/dashboard" replace />;
+  if (!profile || profile.role !== 'SUPER_ADMIN') return <Navigate to="/dashboard" replace />;
 
   if (isLoading) {
     return (
@@ -495,32 +496,39 @@ export const AdminPanel: React.FC = () => {
                       </div>
                       
                       <div className="flex flex-col sm:flex-row gap-2 w-full xl:w-auto shrink-0 items-center">
-                        <div className="w-full sm:w-1/2 xl:w-36">
-                          <CustomDropdown
-                            options={ROLE_OPTIONS}
-                            value={emp.role || ''}
-                            onChange={(newRole) => updateEmployeeRole(emp.id, newRole)}
-                            isLoading={updatingUserId === emp.id}
-                            placeholder="Jabatan"
-                          />
-                        </div>
-                        <div className="w-full sm:w-1/2 xl:w-40">
-                          <CustomDropdown
-                            options={departments.map(d => ({ id: d.id, name: d.name }))}
-                            value={emp.department_id || ''}
-                            onChange={(newDeptId) => updateEmployeeDepartment(emp.id, newDeptId)}
-                            isLoading={updatingUserId === emp.id}
-                            placeholder="Bagian"
-                          />
-                        </div>
-                        {emp.id !== profile.id && (
-                          <button
-                            onClick={() => kickUser(emp.id, emp.full_name)}
-                            className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors sm:ml-1"
-                            title="Keluarkan Pengguna"
-                          >
-                            <UserX className="w-5 h-5" />
-                          </button>
+                        {emp.id === profile.id ? (
+                          <div className="w-full flex items-center justify-end">
+                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 mr-2">{emp.role?.replace('_', ' ')}</span>
+                            <span className="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-lg text-sm font-medium border border-slate-200 dark:border-slate-700 whitespace-nowrap">Paten (Milik Anda)</span>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="w-full sm:w-1/2 xl:w-36">
+                              <CustomDropdown
+                                options={ROLE_OPTIONS}
+                                value={emp.role || ''}
+                                onChange={(newRole) => updateEmployeeRole(emp.id, newRole)}
+                                isLoading={updatingUserId === emp.id}
+                                placeholder="Jabatan"
+                              />
+                            </div>
+                            <div className="w-full sm:w-1/2 xl:w-40">
+                              <CustomDropdown
+                                options={departments.map(d => ({ id: d.id, name: d.name }))}
+                                value={emp.department_id || ''}
+                                onChange={(newDeptId) => updateEmployeeDepartment(emp.id, newDeptId)}
+                                isLoading={updatingUserId === emp.id}
+                                placeholder="Bagian"
+                              />
+                            </div>
+                            <button
+                              onClick={() => kickUser(emp.id, emp.full_name)}
+                              className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors sm:ml-1"
+                              title="Keluarkan Pengguna"
+                            >
+                              <UserX className="w-5 h-5" />
+                            </button>
+                          </>
                         )}
                       </div>
                     </div>
@@ -531,7 +539,7 @@ export const AdminPanel: React.FC = () => {
                   return (
                     <>
                       {unassigned.length > 0 && (
-                        <div className="border border-red-200 dark:border-red-900/50 rounded-xl overflow-hidden mb-4 shadow-sm">
+                        <div className="border border-red-200 dark:border-red-900/50 rounded-xl overflow-visible mb-4 shadow-sm">
                           <div className="bg-red-50 dark:bg-red-900/20 px-4 py-3 border-b border-red-200 dark:border-red-900/50 flex justify-between items-center text-red-600 dark:text-red-400">
                             <span className="font-semibold text-sm">Tanpa Bagian</span>
                             <span className="text-xs bg-red-100 dark:bg-red-900/40 px-2 py-1 rounded-full font-medium">{unassigned.length} Pengguna</span>
@@ -545,7 +553,7 @@ export const AdminPanel: React.FC = () => {
                       {departments.map(dept => {
                         const deptEmployees = employees.filter(e => e.department_id === dept.id);
                         return (
-                          <div key={dept.id} className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm">
+                          <div key={dept.id} className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-visible shadow-sm">
                             <div className="bg-slate-50 dark:bg-slate-800/50 px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
                               <span className="font-semibold text-sm text-slate-800 dark:text-slate-200">{dept.name}</span>
                               <span className="text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 px-2 py-1 rounded-full font-medium">{deptEmployees.length} Pengguna</span>
