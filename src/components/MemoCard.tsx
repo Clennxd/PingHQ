@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import type { Memo } from '../store/memoStore';
-import { MoreVertical, Bookmark, Eye } from 'lucide-react';
+import { MoreVertical, Bookmark, Eye, Users, Building2 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useMemoStore } from '../store/memoStore';
 import { ReadReceiptsModal } from './ReadReceiptsModal';
@@ -53,6 +53,10 @@ export const MemoCard: React.FC<MemoCardProps> = ({ memo }) => {
     }).format(date);
   };
 
+  const isGlobal = !memo.department_id;
+  const targetName = isGlobal ? 'Seluruh Organisasi' : (memo.departments?.name || 'Bagian Internal');
+  const TargetIcon = isGlobal ? Users : Building2;
+
   return (
     <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 mb-4 shadow-sm transition-all hover:shadow-md">
       {/* Header */}
@@ -73,6 +77,10 @@ export const MemoCard: React.FC<MemoCardProps> = ({ memo }) => {
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
               {formatDate(memo.created_at)}
             </p>
+            <div className="flex items-center gap-1.5 mt-1 text-[11px] md:text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/50 w-fit px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700">
+              <TargetIcon size={12} className={isGlobal ? 'text-blue-500' : 'text-indigo-500'} />
+              <span>Kepada: {targetName}</span>
+            </div>
           </div>
         </div>
         <button className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors p-1 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800">

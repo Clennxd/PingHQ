@@ -11,6 +11,7 @@ export interface Memo {
   type: 'URGENT' | 'TASK' | 'INFO';
   created_at: string;
   profiles?: { full_name: string } | null;
+  departments?: { name: string } | null;
 }
 
 interface MemoState {
@@ -81,7 +82,7 @@ export const useMemoStore = create<MemoState>((set, get) => ({
 
       const { data, error } = await supabase
         .from('memos')
-        .select('*, profiles(full_name)')
+        .select('*, profiles(full_name), departments(name)')
         .eq('company_id', companyId)
         .or(orQuery)
         .order('created_at', { ascending: false });
@@ -129,21 +130,18 @@ export const useMemoStore = create<MemoState>((set, get) => ({
               toast.info('ℹ️ INFO: ' + newMemo.message);
             }
 
-            // Fetch profile for this memo to get full_name
-            const { data: profileData } = await supabase
-              .from('profiles')
-              .select('full_name')
-              .eq('user_id', newMemo.sender_id)
+            // Fetch full memo details including relations
+            const { data: memoDetails } = await supabase
+              .from('memos')
+              .select('*, profiles(full_name), departments(name)')
+              .eq('id', newMemo.id)
               .single();
               
-            const memoWithProfile = {
-              ...newMemo,
-              profiles: profileData
-            };
-            
-            set((state) => ({
-              memos: [memoWithProfile as Memo, ...state.memos]
-            }));
+            if (memoDetails) {
+              set((state) => ({
+                memos: [memoDetails as Memo, ...state.memos]
+              }));
+            }
           }
         }
       )
