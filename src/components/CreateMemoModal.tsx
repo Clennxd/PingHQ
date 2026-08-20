@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useMemoStore } from '../store/memoStore';
 import type { Profile } from '../store/authStore';
 import { supabase } from '../lib/supabase';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface CreateMemoModalProps {
   isOpen: boolean;
@@ -82,8 +83,6 @@ export const CreateMemoModal: React.FC<CreateMemoModalProps> = ({ isOpen, onClos
     }
   }, [isOpen, targetOptions, target]);
 
-  if (!isOpen) return null;
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim()) {
@@ -127,79 +126,97 @@ export const CreateMemoModal: React.FC<CreateMemoModalProps> = ({ isOpen, onClos
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl p-6 w-full max-w-md border border-slate-200 dark:border-slate-800">
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Buat Pengumuman</h2>
-        
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-md text-sm border border-red-200 dark:border-red-800">
-            {error}
-          </div>
-        )}
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
+            onClick={onClose}
+          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl p-6 w-full max-w-md border border-slate-200 dark:border-slate-800 relative z-10"
+          >
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Buat Pengumuman</h2>
+            
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-md text-sm border border-red-200 dark:border-red-800">
+                {error}
+              </div>
+            )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Target</label>
-            <select
-              value={target}
-              onChange={(e) => setTarget(e.target.value)}
-              disabled={profile.role === 'STAFF' || targetOptions.length <= 1}
-              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {targetOptions.map((opt) => (
-                <option key={opt.value} value={opt.value} className="text-slate-900 dark:text-slate-200">
-                  {opt.label}
-                </option>
-              ))}
-              {targetOptions.length === 0 && (
-                <option value="" disabled className="text-slate-500">Tidak ada target tersedia</option>
-              )}
-            </select>
-          </div>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Target</label>
+                <select
+                  value={target}
+                  onChange={(e) => setTarget(e.target.value)}
+                  disabled={profile.role === 'STAFF' || targetOptions.length <= 1}
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {targetOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value} className="text-slate-900 dark:text-slate-200">
+                      {opt.label}
+                    </option>
+                  ))}
+                  {targetOptions.length === 0 && (
+                    <option value="" disabled className="text-slate-500">Tidak ada target tersedia</option>
+                  )}
+                </select>
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tipe</label>
-            <select
-              value={type}
-              onChange={(e) => setType(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="INFO" className="text-blue-600 font-semibold">INFO</option>
-              <option value="URGENT" className="text-red-600 font-semibold">URGENT</option>
-              <option value="TASK" className="text-green-600 font-semibold">TASK</option>
-            </select>
-          </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tipe</label>
+                <select
+                  value={type}
+                  onChange={(e) => setType(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="INFO" className="text-blue-600 font-semibold">INFO</option>
+                  <option value="URGENT" className="text-red-600 font-semibold">URGENT</option>
+                  <option value="TASK" className="text-green-600 font-semibold">TASK</option>
+                </select>
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Pesan</label>
-            <textarea
-              rows={4}
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-              placeholder="Tulis pengumuman di sini..."
-            ></textarea>
-          </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Pesan</label>
+                <textarea
+                  rows={4}
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  placeholder="Tulis pengumuman di sini..."
+                ></textarea>
+              </div>
 
-          <div className="flex justify-end space-x-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isSubmitting}
-              className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors disabled:opacity-50 border border-transparent hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md"
-            >
-              Batal
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting || targetOptions.length === 0}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center shadow-sm"
-            >
-              {isSubmitting ? 'Mengirim...' : 'Kirim'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+              <div className="flex justify-end space-x-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  disabled={isSubmitting}
+                  className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors disabled:opacity-50 border border-transparent hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting || targetOptions.length === 0}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center shadow-sm"
+                >
+                  {isSubmitting ? 'Mengirim...' : 'Kirim'}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
   );
 };

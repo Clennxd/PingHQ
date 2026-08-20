@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface Option {
   id: string;
@@ -55,33 +56,41 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
         )}
       </button>
 
-      {isOpen && !isLoading && (
-        <div className="absolute z-50 mt-1 w-full min-w-[150px] bg-white dark:bg-slate-800 shadow-lg rounded-md border border-slate-200 dark:border-slate-700 overflow-hidden right-0 animate-in fade-in zoom-in-95 duration-100">
-          <ul className="max-h-48 overflow-y-auto py-1">
-            {options.map((opt) => (
-              <li
-                key={opt.id}
-                onClick={() => {
-                  onChange(opt.id);
-                  setIsOpen(false);
-                }}
-                className={`px-3 py-2 text-xs cursor-pointer transition-colors ${
-                  opt.id === value
-                    ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-semibold'
-                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50'
-                }`}
-              >
-                {opt.name}
-              </li>
-            ))}
-            {options.length === 0 && (
-              <li className="px-3 py-2 text-xs text-slate-500 italic text-center">
-                Tidak ada opsi
-              </li>
-            )}
-          </ul>
-        </div>
-      )}
+      <AnimatePresence>
+        {isOpen && !isLoading && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+            className="absolute z-50 mt-1 w-full min-w-[150px] bg-white dark:bg-slate-800 shadow-lg rounded-md border border-slate-200 dark:border-slate-700 overflow-hidden right-0"
+          >
+            <ul className="max-h-48 overflow-y-auto py-1">
+              {options.map((opt) => (
+                <li
+                  key={opt.id}
+                  onClick={() => {
+                    onChange(opt.id);
+                    setIsOpen(false);
+                  }}
+                  className={`px-3 py-2 text-xs cursor-pointer transition-colors ${
+                    opt.id === value
+                      ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-semibold'
+                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50'
+                  }`}
+                >
+                  {opt.name}
+                </li>
+              ))}
+              {options.length === 0 && (
+                <li className="px-3 py-2 text-xs text-slate-500 italic text-center">
+                  Tidak ada opsi
+                </li>
+              )}
+            </ul>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
