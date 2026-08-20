@@ -484,35 +484,41 @@ export const AdminPanel: React.FC = () => {
               <div className="flex-1 overflow-y-auto max-h-[500px] mb-6 space-y-4 pr-1">
                 {(() => {
                   const renderEmployeeRow = (emp: any) => (
-                    <div key={emp.id} className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 p-3 md:p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                      <div className="flex items-center gap-3 min-w-0 mb-1 xl:mb-0">
-                        <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center font-bold text-sm shrink-0 border border-slate-300 dark:border-slate-600">
-                          {emp.full_name?.charAt(0) || '?'}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{emp.full_name}</p>
-                          <p className="text-[10px] md:text-xs text-slate-500 truncate mt-0.5">{emp.user_id_login}</p>
-                        </div>
-                      </div>
+                    <div key={emp.id} className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 p-3 md:p-4 border-b border-slate-100 dark:border-slate-800/50 last:border-b-0 hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
                       
-                      <div className="flex flex-col sm:flex-row gap-2 w-full xl:w-auto shrink-0 items-center">
+                      {/* BAGIAN ATAS (Mobile) / KIRI (Desktop): Info User & Tombol Kick */}
+                      <div className="flex items-start justify-between w-full lg:w-auto">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-sm flex-shrink-0">
+                            {emp.full_name?.charAt(0)?.toUpperCase() || '?'}
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-sm md:text-base font-semibold text-slate-800 dark:text-white line-clamp-1">{emp.full_name}</span>
+                            <span className="text-xs text-slate-500">{emp.user_id_login}</span>
+                          </div>
+                        </div>
+
+                        {emp.id !== profile.id && (
+                          <button 
+                            onClick={() => kickUser(emp.id, emp.full_name)}
+                            className="lg:hidden p-2 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors ml-2"
+                            title="Keluarkan Pengguna"
+                          >
+                            <UserX size={18} />
+                          </button>
+                        )}
+                      </div>
+
+                      {/* BAGIAN BAWAH (Mobile) / KANAN (Desktop): Dropdowns & Kick (Desktop) */}
+                      <div className="flex flex-col sm:flex-row items-center gap-2 w-full lg:w-auto mt-1 lg:mt-0">
                         {emp.id === profile.id ? (
-                          <div className="w-full flex items-center justify-end">
-                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 mr-2">{emp.role?.replace('_', ' ')}</span>
-                            <span className="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-lg text-sm font-medium border border-slate-200 dark:border-slate-700 whitespace-nowrap">Paten (Milik Anda)</span>
+                          <div className="w-full sm:w-auto flex items-center gap-2 justify-center lg:justify-end">
+                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">{emp.role?.replace('_', ' ')}</span>
+                            <span className="px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-lg text-xs md:text-sm font-medium border border-slate-200 dark:border-slate-700 text-center whitespace-nowrap">Paten (Milik Anda)</span>
                           </div>
                         ) : (
                           <>
-                            <div className="w-full sm:w-1/2 xl:w-36">
-                              <CustomDropdown
-                                options={ROLE_OPTIONS}
-                                value={emp.role || ''}
-                                onChange={(newRole) => updateEmployeeRole(emp.id, newRole)}
-                                isLoading={updatingUserId === emp.id}
-                                placeholder="Jabatan"
-                              />
-                            </div>
-                            <div className="w-full sm:w-1/2 xl:w-40">
+                            <div className="w-full sm:w-auto sm:min-w-[140px]">
                               <CustomDropdown
                                 options={departments.map(d => ({ id: d.id, name: d.name }))}
                                 value={emp.department_id || ''}
@@ -521,12 +527,21 @@ export const AdminPanel: React.FC = () => {
                                 placeholder="Bagian"
                               />
                             </div>
-                            <button
+                            <div className="w-full sm:w-auto sm:min-w-[140px]">
+                              <CustomDropdown
+                                options={ROLE_OPTIONS}
+                                value={emp.role || ''}
+                                onChange={(newRole) => updateEmployeeRole(emp.id, newRole)}
+                                isLoading={updatingUserId === emp.id}
+                                placeholder="Jabatan"
+                              />
+                            </div>
+                            <button 
                               onClick={() => kickUser(emp.id, emp.full_name)}
-                              className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors sm:ml-1"
+                              className="hidden lg:flex p-2 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors ml-1"
                               title="Keluarkan Pengguna"
                             >
-                              <UserX className="w-5 h-5" />
+                              <UserX size={20} />
                             </button>
                           </>
                         )}
