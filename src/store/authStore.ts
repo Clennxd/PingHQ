@@ -119,7 +119,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await get().checkSession();
     } catch (error: any) {
       console.error("REGISTER GAGAL:", error);
-      alert("ERROR REGISTER: " + error.message); // PAKSA MUNCUL POP-UP
       throw error;
     } finally {
       set({ isLoading: false });
@@ -168,7 +167,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await get().checkSession();
     } catch (error: any) {
       console.error("JOIN GAGAL:", error);
-      alert("ERROR JOIN: " + error.message);
       throw error;
     } finally {
       set({ isLoading: false });

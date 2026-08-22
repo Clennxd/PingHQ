@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, Navigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
+import { toast } from 'sonner';
+import { AlertCircle } from 'lucide-react';
 
 export const Register: React.FC = () => {
   const [companyName, setCompanyName] = useState('');
@@ -26,7 +28,12 @@ export const Register: React.FC = () => {
       await register(companyName, fullName, username, password);
       navigate('/dashboard');
     } catch (err: any) {
-      setErrorMsg(err.message || 'Registrasi gagal. Silakan coba lagi.');
+      let msg = err.message || 'Registrasi gagal. Silakan coba lagi.';
+      if (msg.includes('duplicate key') || msg.includes('already registered') || msg.includes('User already exists')) {
+        msg = 'User ID tersebut sudah digunakan. Silakan pilih User ID yang lain.';
+      }
+      setErrorMsg(msg);
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -41,8 +48,9 @@ export const Register: React.FC = () => {
         </div>
 
         {errorMsg && (
-          <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-md">
-            <p className="text-sm text-red-500 font-medium">{errorMsg}</p>
+          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-r-lg flex items-start gap-3">
+            <AlertCircle className="text-red-500 flex-shrink-0 mt-0.5" size={18} />
+            <p className="text-sm text-red-700 dark:text-red-400 font-medium">{errorMsg}</p>
           </div>
         )}
 

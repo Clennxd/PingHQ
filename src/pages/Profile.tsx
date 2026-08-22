@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Lock, Building, Users as UsersIcon, Shield } from 'lucide-react';
+import { ArrowLeft, User, Lock, Building, Users as UsersIcon, Shield, UserCircle, IdCard, Key, ArrowRight, Clock } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { toast } from 'sonner';
 import { ConfirmModal } from '../components/ConfirmModal';
@@ -108,200 +108,224 @@ export const Profile: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-4 md:p-8 pb-12 text-slate-900 dark:text-slate-100">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <button onClick={() => navigate(-1)} className="p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 transition-colors">
-            <ArrowLeft size={20} />
-          </button>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white">Profil Saya</h1>
-        </div>
+    <div className="w-full max-w-6xl mx-auto p-4 md:p-6 lg:p-8">
+      {/* Header Halaman */}
+      <div className="flex items-center gap-3 mb-8">
+        <button onClick={() => navigate(-1)} className="p-2 md:hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 transition-colors">
+          <ArrowLeft size={20} />
+        </button>
+        <h1 className="text-xl md:text-3xl font-bold text-slate-900 dark:text-white">Profil Saya</h1>
+        <span className="text-slate-400 hidden md:inline">•</span>
+        <p className="text-slate-500 text-sm hidden md:block">Kelola pengaturan akun dan preferensi Anda</p>
+      </div>
 
-        <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        {/* KOLOM KIRI */}
+        <div className="lg:col-span-8">
+          
           {/* Card 1: Informasi Akun */}
-          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-4 md:p-6">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-slate-800 dark:text-slate-200">
-              <User className="w-5 h-5 text-blue-500" />
-              Informasi Akun
-            </h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">User ID Login</label>
-                <input
-                  type="text"
-                  value={profile.user_id_login}
-                  disabled
-                  className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-500 dark:text-slate-400 cursor-not-allowed"
-                />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Organisasi</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Building className="w-4 h-4 text-slate-400" />
-                    </div>
-                    <input
-                      type="text"
-                      value={profile.companies?.name || '-'}
-                      disabled
-                      className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-500 dark:text-slate-400 cursor-not-allowed"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Bagian</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <UsersIcon className="w-4 h-4 text-slate-400" />
-                    </div>
-                    <input
-                      type="text"
-                      value={profile.departments?.name || 'Tanpa Bagian'}
-                      disabled
-                      className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-500 dark:text-slate-400 cursor-not-allowed"
-                    />
-                  </div>
-                </div>
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 md:p-8 border border-slate-200 dark:border-slate-800 relative overflow-hidden shadow-sm">
+            <IdCard className="hidden md:block opacity-5 absolute -top-4 -right-4 w-32 h-32 text-slate-900 dark:text-white" />
+            
+            <div className="flex items-start gap-3 md:gap-4 relative z-10">
+              <div className="p-3 bg-slate-100 dark:bg-slate-800 rounded-2xl">
+                <User className="w-5 h-5 md:w-6 md:h-6 text-slate-700 dark:text-slate-300" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Role Akses</label>
-                <div className="mt-1">
-                  <span className="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-full text-sm font-medium border border-slate-200 dark:border-slate-700">
-                    {profile.role.replace('_', ' ')}
+                <h2 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white">Informasi Akun</h2>
+                <p className="text-xs md:text-sm text-slate-500 mt-1">Detail kredensial dan hak akses organisasi.</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-8 mt-6 md:mt-8 relative z-10">
+              <div>
+                <label className="block text-slate-400 text-xs md:text-sm font-medium">User ID Login</label>
+                <div className="text-lg md:text-xl font-bold mt-1 text-slate-900 dark:text-white">{profile.user_id_login}</div>
+              </div>
+              <div>
+                <label className="block text-slate-400 text-xs md:text-sm font-medium">Role Akses</label>
+                <div>
+                  <span className="inline-flex items-center px-3 py-1 mt-1 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded-full text-xs font-bold tracking-wider">
+                    <Shield size={12} className="mr-1.5" /> {profile.role.replace('_', ' ')}
                   </span>
+                </div>
+              </div>
+              <div>
+                <label className="block text-slate-400 text-xs md:text-sm font-medium">Organisasi</label>
+                <div className="flex items-center gap-2 mt-1 text-slate-900 dark:text-white font-semibold text-sm md:text-base">
+                  <Building className="w-4 h-4 text-blue-500 shrink-0" />
+                  <span className="truncate">{profile.companies?.name || '-'}</span>
+                </div>
+              </div>
+              <div>
+                <label className="block text-slate-400 text-xs md:text-sm font-medium">Bagian</label>
+                <div className="flex items-center gap-2 mt-1 text-slate-900 dark:text-white font-semibold text-sm md:text-base">
+                  <UsersIcon className="w-4 h-4 text-green-500 shrink-0" />
+                  <span className="truncate">{profile.departments?.name || 'Tanpa Bagian'}</span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Card 2: Ubah Nama */}
-          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col">
-            <div className="p-6">
-              <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Informasi Pribadi</h3>
-              <p className="text-sm text-slate-500 mt-1 mb-4">Gunakan nama asli Anda agar mudah dikenali oleh anggota organisasi lain.</p>
-              <form id="update-name-form" onSubmit={handleNameSubmit} className="flex flex-col">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Nama Lengkap</label>
+          {/* Card 2: Profil Pribadi */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 md:p-8 border border-slate-200 dark:border-slate-800 relative overflow-hidden shadow-sm mt-6">
+            <div className="flex items-start gap-3 md:gap-4 mb-6">
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-2xl">
+                <UserCircle className="w-5 h-5 md:w-6 md:h-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <h2 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white">Profil Pribadi</h2>
+                <p className="text-xs md:text-sm text-slate-500 mt-1">Gunakan identitas asli untuk memudahkan kolaborasi internal.</p>
+              </div>
+            </div>
+
+            <form id="update-name-form" onSubmit={handleNameSubmit}>
+              <div className="mb-6 relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <User className="w-5 h-5 text-slate-400" />
+                </div>
                 <input
                   type="text"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
-                  placeholder="Contoh: John Doe"
+                  placeholder="Nama Lengkap"
                   required
-                  className="w-full max-w-md px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-slate-900 dark:text-white"
+                  className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-slate-900 dark:text-white text-sm md:text-base font-medium"
                 />
-              </form>
-            </div>
-            <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex justify-start">
-              <button
-                type="submit"
-                form="update-name-form"
-                disabled={isUpdatingName || newName.trim() === profile.full_name}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm flex items-center justify-center min-w-[160px]"
-              >
-                {isUpdatingName ? 'Menyimpan...' : 'Simpan Perubahan'}
-              </button>
-            </div>
+              </div>
+
+              <div className="mt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <p className="text-xs text-slate-500">Nama ini akan tampil di seluruh aplikasi.</p>
+                <button
+                  type="submit"
+                  disabled={isUpdatingName || newName.trim() === profile.full_name}
+                  className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 px-6 py-2.5 rounded-xl text-sm md:text-base font-semibold transition-colors disabled:opacity-50 flex justify-center items-center"
+                >
+                  {isUpdatingName ? 'Menyimpan...' : 'Simpan Perubahan'}
+                </button>
+              </div>
+            </form>
           </div>
 
-          {/* Card 3: Ubah Password */}
-          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col">
-            <div className="p-6">
-              <h3 className="text-lg font-semibold text-slate-800 dark:text-white flex items-center gap-2">
-                <Lock className="w-5 h-5 text-slate-500" />
-                Ubah Password
-              </h3>
-              <p className="text-sm text-slate-500 mt-1 mb-4">Amankan akun Anda dengan menggunakan password yang kuat dan unik.</p>
-              
-              {pwdStep === 'idle' && (
-                <div className="pt-2">
-                  <button
-                    onClick={() => setPwdStep('verify')}
-                    className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-6 py-2 rounded-lg font-medium transition-colors shadow-sm"
-                  >
-                    Mulai Ubah Password
-                  </button>
-                </div>
-              )}
+        </div>
 
-              {pwdStep === 'verify' && (
-                <form id="verify-pwd-form" onSubmit={handleVerifyOldPassword} className="flex flex-col">
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Password Saat Ini</label>
+        {/* KOLOM KANAN */}
+        <div className="lg:col-span-4">
+          
+          {/* Card 3: Keamanan Akun (DARK CARD) */}
+          <div className="bg-slate-900 dark:bg-slate-950 text-white rounded-3xl p-5 md:p-8 shadow-lg relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-5 md:p-6">
+              <span className="text-[9px] md:text-[10px] font-bold bg-white/10 px-2 md:px-3 py-1 rounded-full tracking-widest text-white/80">KEAMANAN</span>
+            </div>
+            
+            <div className="p-3 bg-white/10 rounded-2xl w-fit backdrop-blur-sm border border-white/5 mt-2 md:mt-2">
+              <Key className="w-5 h-5 md:w-6 md:h-6 text-white" />
+            </div>
+
+            <h2 className="text-xl md:text-2xl font-bold mt-5 md:mt-6">Keamanan Akun</h2>
+            <p className="text-slate-400 text-xs md:text-sm mt-2 md:mt-3 leading-relaxed">
+              Amankan akun Anda dengan menggunakan password yang kuat dan unik.
+            </p>
+
+            {pwdStep === 'idle' && (
+              <button 
+                onClick={() => setPwdStep('verify')}
+                className="w-full mt-6 md:mt-8 bg-white text-slate-900 hover:bg-slate-100 py-2.5 px-4 md:py-3 rounded-xl flex justify-between items-center text-sm md:text-base font-semibold transition-colors"
+              >
+                Mulai Ubah Password <ArrowRight size={18}/>
+              </button>
+            )}
+
+            {pwdStep === 'verify' && (
+              <form onSubmit={handleVerifyOldPassword} className="mt-6 flex flex-col gap-4">
+                <div>
                   <input
                     type="password"
                     value={oldPwd}
                     onChange={(e) => setOldPwd(e.target.value)}
-                    placeholder="Masukkan password lama"
+                    placeholder="Password saat ini"
                     required
-                    className="w-full max-w-md px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-slate-900 dark:text-white"
+                    className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-white text-sm md:text-base placeholder:text-slate-500"
                   />
-                </form>
-              )}
-
-              {pwdStep === 'update' && (
-                <form id="update-pwd-form" onSubmit={handleUpdatePassword} className="flex flex-col gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Password Baru</label>
-                    <input
-                      type="password"
-                      value={newPwd}
-                      onChange={(e) => setNewPwd(e.target.value)}
-                      placeholder="Min. 6 karakter"
-                      required
-                      minLength={6}
-                      className="w-full max-w-md px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-slate-900 dark:text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Konfirmasi Password Baru</label>
-                    <input
-                      type="password"
-                      value={confirmPwd}
-                      onChange={(e) => setConfirmPwd(e.target.value)}
-                      placeholder="Masukkan ulang password baru"
-                      required
-                      minLength={6}
-                      className="w-full max-w-md px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-slate-900 dark:text-white"
-                    />
-                  </div>
-                </form>
-              )}
-            </div>
-
-            {pwdStep !== 'idle' && (
-              <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex justify-start gap-3">
-                {pwdStep === 'verify' ? (
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    type="button"
+                    onClick={handleCancelPasswordUpdate}
+                    className="w-full sm:w-auto px-4 py-3 bg-slate-800 hover:bg-slate-700 rounded-xl text-sm md:text-base font-semibold transition-colors flex-1 text-slate-300"
+                  >
+                    Batal
+                  </button>
                   <button
                     type="submit"
-                    form="verify-pwd-form"
                     disabled={isVerifying || !oldPwd.trim()}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 shadow-sm min-w-[120px] flex items-center justify-center"
+                    className="w-full sm:w-auto px-4 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl text-sm md:text-base font-semibold transition-colors flex-1 disabled:opacity-50"
                   >
-                    {isVerifying ? 'Memverifikasi...' : 'Lanjut'}
+                    {isVerifying ? 'Cek...' : 'Lanjut'}
                   </button>
-                ) : (
+                </div>
+              </form>
+            )}
+
+            {pwdStep === 'update' && (
+              <form onSubmit={handleUpdatePassword} className="mt-6 flex flex-col gap-4">
+                <input
+                  type="password"
+                  value={newPwd}
+                  onChange={(e) => setNewPwd(e.target.value)}
+                  placeholder="Password baru"
+                  required
+                  minLength={6}
+                  className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-white text-sm md:text-base placeholder:text-slate-500"
+                />
+                <input
+                  type="password"
+                  value={confirmPwd}
+                  onChange={(e) => setConfirmPwd(e.target.value)}
+                  placeholder="Konfirmasi password baru"
+                  required
+                  minLength={6}
+                  className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-white text-sm md:text-base placeholder:text-slate-500"
+                />
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    type="button"
+                    onClick={handleCancelPasswordUpdate}
+                    className="w-full sm:w-auto px-4 py-3 bg-slate-800 hover:bg-slate-700 rounded-xl text-sm md:text-base font-semibold transition-colors flex-1 text-slate-300"
+                  >
+                    Batal
+                  </button>
                   <button
                     type="submit"
-                    form="update-pwd-form"
                     disabled={isUpdatingPassword || !newPwd.trim() || !confirmPwd.trim()}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 shadow-sm min-w-[160px] flex items-center justify-center"
+                    className="w-full sm:w-auto px-4 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl text-sm md:text-base font-semibold transition-colors flex-1 disabled:opacity-50"
                   >
-                    {isUpdatingPassword ? 'Menyimpan...' : 'Simpan Password'}
+                    {isUpdatingPassword ? 'Simpan...' : 'Simpan'}
                   </button>
-                )}
-                <button
-                  type="button"
-                  onClick={handleCancelPasswordUpdate}
-                  className="px-6 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg font-medium transition-colors"
-                >
-                  Batal
-                </button>
-              </div>
+                </div>
+              </form>
             )}
           </div>
-          
+
+          {/* Card 4: Aktivitas Terakhir */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 md:p-8 border border-slate-200 dark:border-slate-800 shadow-sm mt-6">
+            <div className="flex items-center gap-3 mb-4">
+              <Clock className="w-5 h-5 text-slate-400" />
+              <h3 className="text-base md:text-lg font-bold text-slate-900 dark:text-white">Aktivitas Terakhir</h3>
+            </div>
+            <div className="p-4 bg-emerald-50 dark:bg-emerald-900/10 rounded-2xl border border-emerald-100 dark:border-emerald-800/50">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <p className="font-semibold text-sm md:text-base text-emerald-900 dark:text-emerald-400">Sesi Aktif Saat Ini</p>
+              </div>
+              <p className="text-xs md:text-sm text-emerald-600 dark:text-emerald-500/80">Sesi login berhasil dari perangkat terverifikasi.</p>
+            </div>
+          </div>
+
         </div>
-      
+      </div>
+
       <ConfirmModal 
         {...confirmConfig} 
         onClose={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))} 
