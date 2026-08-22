@@ -32,9 +32,9 @@ export const AppLayout: React.FC = () => {
     <div className="flex h-screen w-full bg-[#F8FAFC] dark:bg-slate-950 overflow-hidden font-sans relative">
       
       {/* SIDEBAR (Responsive) */}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 flex flex-col ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed inset-y-0 left-0 z-50 w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 flex flex-col ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         
-        <button className="md:hidden absolute top-4 right-4 text-slate-500" onClick={() => setIsMobileMenuOpen(false)}>
+        <button className="lg:hidden absolute top-4 right-4 text-slate-500" onClick={() => setIsMobileMenuOpen(false)}>
           <X size={24} />
         </button>
 
@@ -156,13 +156,13 @@ export const AppLayout: React.FC = () => {
       </aside>
 
       {/* OVERLAY GELAP */}
-      {isMobileMenuOpen && <div className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)} />}
+      {isMobileMenuOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)} />}
 
       {/* MAIN CONTENT AREA */}
       <div className="flex-1 flex flex-col h-full overflow-y-auto overflow-x-hidden w-full relative">
         
         {/* MOBILE HEADER */}
-        <div className="md:hidden flex items-center justify-between bg-white dark:bg-slate-900 h-16 px-4 border-b border-slate-200 dark:border-slate-800 flex-shrink-0 z-20">
+        <div className="lg:hidden flex items-center justify-between bg-white dark:bg-slate-900 h-16 px-4 border-b border-slate-200 dark:border-slate-800 flex-shrink-0 z-20">
           <span className="font-bold text-blue-600 text-xl tracking-tight">PingHQ</span>
           <button onClick={() => setIsMobileMenuOpen(true)} className="text-slate-700 dark:text-slate-300 p-2 -mr-2">
             <Menu size={24} />
@@ -173,7 +173,7 @@ export const AppLayout: React.FC = () => {
       </div>
 
       {/* GLOBAL FAB (Mobile) */}
-      <button onClick={() => setIsModalOpen(true)} className="md:hidden fixed bottom-6 right-6 z-30 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-xl shadow-blue-600/30 transition-transform active:scale-95">
+      <button onClick={() => setIsModalOpen(true)} className="lg:hidden fixed bottom-6 right-6 z-30 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-xl shadow-blue-600/30 transition-transform active:scale-95">
         <Plus size={24} />
       </button>
 

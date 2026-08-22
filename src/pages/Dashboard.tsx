@@ -89,7 +89,7 @@ export const Dashboard: React.FC = () => {
   return (
     <div className="flex flex-col w-full min-h-full">
       {/* Top Navbar */}
-      <div className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 lg:px-6 shrink-0 z-10 shadow-sm lg:shadow-none">
+      <div className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 md:px-6 lg:px-8 shrink-0 z-10 shadow-sm lg:shadow-none">
         <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
           <span className="hidden sm:inline">Dashboard</span>
           <span className="hidden sm:inline">&gt;</span>
@@ -124,7 +124,7 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* Content Body */}
-      <div className="flex-1 overflow-y-scroll p-4 lg:p-6 pb-24 lg:pb-6 relative scroll-smooth" style={{ scrollbarGutter: 'stable' }}>
+      <div className="flex-1 overflow-y-scroll p-4 md:p-6 lg:p-8 pb-24 lg:pb-8 relative scroll-smooth" style={{ scrollbarGutter: 'stable' }}>
         <div className="max-w-6xl mx-auto">
           {/* Content Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
@@ -149,7 +149,7 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {/* Grid Layout */}
-          <div className="flex flex-col lg:grid lg:grid-cols-12 gap-4 lg:gap-6 items-start w-full max-w-full">
+          <div className="flex flex-col lg:grid lg:grid-cols-12 gap-4 md:gap-6 items-start w-full max-w-full">
             
             {/* Kolom Kiri: Filter & Banner */}
             <div className="lg:col-span-4 xl:col-span-3 flex flex-col gap-4 w-full min-w-0 lg:sticky lg:top-0">

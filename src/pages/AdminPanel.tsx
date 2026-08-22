@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, Navigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { supabase } from '../lib/supabase';
-import { Building, Building2, Users, Plus, LayoutDashboard, Settings, ShieldCheck, Clock, RefreshCw, UserX, Lock } from 'lucide-react';
+import { Building, Building2, Users, Plus, LayoutDashboard, Settings, ShieldCheck, Clock, RefreshCw, UserX, Lock, Download, Database, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { CustomDropdown } from '../components/CustomDropdown';
 import { ConfirmModal } from '../components/ConfirmModal';
+import * as XLSX from 'xlsx-js-style';
 
 const ADMIN_MENUS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -48,6 +49,7 @@ export const AdminPanel: React.FC = () => {
 
   const [companyNameInput, setCompanyNameInput] = useState(profile?.companies?.name || '');
   const [isSavingCompany, setIsSavingCompany] = useState(false);
+  const [isExportingMemos, setIsExportingMemos] = useState(false);
 
   useEffect(() => {
     if (!profile) return;
@@ -321,7 +323,7 @@ export const AdminPanel: React.FC = () => {
       </div>
 
       {/* Desktop Header Area */}
-      <div className="hidden md:flex justify-between items-center p-6 md:p-8 shrink-0">
+      <div className="hidden md:flex justify-between items-center p-4 md:p-6 lg:p-8 shrink-0">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Admin Panel</h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Kelola struktur organisasi dan akses pengguna.</p>
@@ -329,9 +331,9 @@ export const AdminPanel: React.FC = () => {
       </div>
 
       {activeTab === 'organisasi' ? (
-        <div className="px-4 md:px-8 pb-8 flex flex-col gap-6">
+        <div className="px-4 md:px-6 lg:px-8 pb-8 flex flex-col gap-6">
           {/* Banner Kode Undangan */}
-          <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/50 rounded-2xl p-6 md:p-8 text-center relative overflow-hidden shrink-0 shadow-sm">
+          <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/50 rounded-2xl p-4 md:p-6 lg:p-8 text-center relative overflow-hidden shrink-0 shadow-sm">
             <div className="relative z-10 flex flex-col items-center justify-center">
               <div className="flex items-center justify-center gap-2 mb-3 md:mb-4">
                 <h2 className="text-xs md:text-sm font-semibold text-indigo-900/60 dark:text-indigo-400/80 uppercase tracking-widest">Kode Undangan Organisasi</h2>
@@ -367,7 +369,7 @@ export const AdminPanel: React.FC = () => {
 
           {/* Pengaturan Nama Organisasi */}
           <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
-            <div className="p-6">
+            <div className="p-4 md:p-6">
               <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Profil Organisasi</h3>
               <p className="text-sm text-slate-500 mt-1 mb-4">Nama ini akan ditampilkan kepada seluruh anggota saat mereka bergabung.</p>
               
@@ -406,10 +408,10 @@ export const AdminPanel: React.FC = () => {
           </div>
         </div>
       ) : activeTab === 'bagian' ? (
-        <div className="px-4 md:px-8 pb-8">
-          <div className="flex flex-col gap-6">
+        <div className="px-4 md:px-6 lg:px-8 pb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
             <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
-              <div className="p-6">
+              <div className="p-4 md:p-6">
                 <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Tambah Bagian Baru</h3>
                 <p className="text-sm text-slate-500 mt-1 mb-4">Buat bagian/departemen baru untuk mengelompokkan pengguna Anda.</p>
                 <form id="add-dept-form" onSubmit={handleAddDeptSubmit} className="flex flex-col">
@@ -472,7 +474,7 @@ export const AdminPanel: React.FC = () => {
       </div>
       ) : activeTab === 'pengguna' ? (
         <>
-          <div className="px-4 md:px-8 pb-8">
+          <div className="px-4 md:px-6 lg:px-8 pb-8">
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 md:p-6 shadow-sm flex flex-col min-h-[400px]">
               <div className="flex items-center gap-3 mb-6 shrink-0">
                 <div className="p-2 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-lg">
@@ -642,10 +644,239 @@ export const AdminPanel: React.FC = () => {
           </div>
         </div>
       ) : activeTab === 'pengaturan' ? (
-        <div className="flex-1 flex flex-col items-center justify-center text-slate-400 h-full p-4">
-          <Settings size={48} className="mb-4 opacity-20" />
-          <h2 className="text-xl font-semibold text-slate-600 dark:text-slate-300 text-center">Pengaturan Lanjutan</h2>
-          <p className="text-sm mt-2 text-center">Modul ini sedang dalam tahap pengembangan.</p>
+        <div className="px-4 md:px-6 lg:px-8 pb-8 flex flex-col gap-6">
+
+          {/* Card 1: Ekspor Data */}
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
+            <div className="p-4 md:p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg">
+                  <Download className="w-5 h-5" />
+                </div>
+                <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Ekspor Data (Excel)</h3>
+              </div>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 ml-[52px]">Unduh data pengguna dan riwayat pengumuman dalam format Microsoft Excel (.xlsx) yang rapi.</p>
+            </div>
+            <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex justify-start">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => {
+                    const data = employees.map(p => ({
+                      'Nama Lengkap': p.full_name,
+                      'User ID': p.user_id_login,
+                      'Jabatan': (p.role || '').replace('_', ' '),
+                      'Bagian': departments.find(d => d.id === p.department_id)?.name || 'Tanpa Bagian'
+                    }));
+
+                    const worksheet = XLSX.utils.json_to_sheet(data);
+
+                    const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:D1');
+                    const borderStyle = {
+                      top: { style: 'thin', color: { rgb: 'FFCCCCCC' } },
+                      bottom: { style: 'thin', color: { rgb: 'FFCCCCCC' } },
+                      left: { style: 'thin', color: { rgb: 'FFCCCCCC' } },
+                      right: { style: 'thin', color: { rgb: 'FFCCCCCC' } }
+                    };
+
+                    for (let R = range.s.r; R <= range.e.r; ++R) {
+                      for (let C = range.s.c; C <= range.e.c; ++C) {
+                        const address = XLSX.utils.encode_cell({ r: R, c: C });
+                        if (!worksheet[address]) continue;
+
+                        if (R === 0) {
+                          // Style untuk Header (Baris 1)
+                          worksheet[address].s = {
+                            font: { bold: true, color: { rgb: "FFFFFFFF" } },
+                            fill: { fgColor: { rgb: "FF4F46E5" } },
+                            alignment: { horizontal: "center", vertical: "center" },
+                            border: borderStyle
+                          };
+                        } else {
+                          // Style untuk Data (Baris 2 dst)
+                          worksheet[address].s = {
+                            alignment: { vertical: "center" },
+                            border: borderStyle
+                          };
+                        }
+                      }
+                    }
+
+                    worksheet['!cols'] = [{ wch: 30 }, { wch: 20 }, { wch: 25 }, { wch: 30 }];
+
+                    const workbook = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(workbook, worksheet, "Data Pengguna");
+                    XLSX.writeFile(workbook, `Data_Pengguna_${profile?.companies?.name?.replace(/\s+/g, '_') || 'Organisasi'}.xlsx`);
+                    toast.success('File Excel Pengguna berhasil diunduh!');
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2"
+                >
+                  <Download size={16} />
+                  Unduh Data Pengguna
+                </button>
+                <button
+                  disabled={isExportingMemos}
+                  onClick={async () => {
+                    setIsExportingMemos(true);
+                    try {
+                      const { data: allMemos, error } = await supabase
+                        .from('memos')
+                        .select('*, profiles(full_name), departments(name)')
+                        .eq('company_id', profile!.company_id)
+                        .order('created_at', { ascending: false });
+                      if (error) throw error;
+                      if (!allMemos || allMemos.length === 0) { toast.error('Belum ada pengumuman untuk diekspor.'); return; }
+
+                      const data = allMemos.map(m => ({
+                        'Tanggal & Waktu': new Date(m.created_at).toLocaleString('id-ID'),
+                        'Pengirim': m.profiles?.full_name || 'Unknown',
+                        'Tipe': m.type,
+                        'Target Bagian': m.department_id ? (m.departments?.name || 'Bagian Internal') : 'Seluruh Organisasi',
+                        'Isi Pengumuman': m.message
+                      }));
+
+                      const worksheet = XLSX.utils.json_to_sheet(data);
+
+                      const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:E1');
+                      const borderStyle = {
+                        top: { style: 'thin', color: { rgb: 'FFCCCCCC' } },
+                        bottom: { style: 'thin', color: { rgb: 'FFCCCCCC' } },
+                        left: { style: 'thin', color: { rgb: 'FFCCCCCC' } },
+                        right: { style: 'thin', color: { rgb: 'FFCCCCCC' } }
+                      };
+
+                      for (let R = range.s.r; R <= range.e.r; ++R) {
+                        for (let C = range.s.c; C <= range.e.c; ++C) {
+                          const address = XLSX.utils.encode_cell({ r: R, c: C });
+                          if (!worksheet[address]) continue;
+
+                          if (R === 0) {
+                            // Style untuk Header (Baris 1)
+                            worksheet[address].s = {
+                              font: { bold: true, color: { rgb: "FFFFFFFF" } },
+                              fill: { fgColor: { rgb: "FF4F46E5" } },
+                              alignment: { horizontal: "center", vertical: "center" },
+                              border: borderStyle
+                            };
+                          } else {
+                            // Style untuk Data (Baris 2 dst)
+                            worksheet[address].s = {
+                              alignment: { vertical: "center" },
+                              border: borderStyle
+                            };
+                          }
+                        }
+                      }
+
+                      worksheet['!cols'] = [{ wch: 25 }, { wch: 30 }, { wch: 15 }, { wch: 30 }, { wch: 60 }];
+
+                      const workbook = XLSX.utils.book_new();
+                      XLSX.utils.book_append_sheet(workbook, worksheet, "Riwayat Pengumuman");
+                      XLSX.writeFile(workbook, `Riwayat_Pengumuman_${profile?.companies?.name?.replace(/\s+/g, '_') || 'Organisasi'}.xlsx`);
+                      toast.success('File Excel Pengumuman berhasil diunduh!');
+                    } catch (err: any) {
+                      toast.error(err.message);
+                    } finally {
+                      setIsExportingMemos(false);
+                    }
+                  }}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Download size={16} />
+                  {isExportingMemos ? 'Mengunduh...' : 'Unduh Riwayat Pengumuman'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 2: Manajemen Penyimpanan */}
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
+            <div className="p-4 md:p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-lg">
+                  <Database className="w-5 h-5" />
+                </div>
+                <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Manajemen Penyimpanan</h3>
+              </div>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 ml-[52px]">Bersihkan pengumuman yang sudah usang untuk menghemat ruang penyimpanan dan mempercepat aplikasi.</p>
+            </div>
+            <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex justify-start">
+              <button
+                onClick={() => {
+                  setConfirmConfig({
+                    isOpen: true,
+                    title: 'Hapus Pengumuman Lama',
+                    message: 'Apakah Anda yakin ingin menghapus semua pengumuman yang berusia lebih dari 30 hari? Tindakan ini tidak dapat dibatalkan.',
+                    confirmText: 'Ya, Hapus',
+                    isDanger: true,
+                    onConfirm: async () => {
+                      try {
+                        const thirtyDaysAgo = new Date();
+                        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                        const { error } = await supabase
+                          .from('memos')
+                          .delete()
+                          .eq('company_id', profile!.company_id)
+                          .lt('created_at', thirtyDaysAgo.toISOString());
+                        if (error) throw error;
+                        toast.success('Pengumuman lama berhasil dihapus!');
+                      } catch (err: any) {
+                        toast.error('Gagal menghapus: ' + err.message);
+                      }
+                      setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+                    }
+                  });
+                }}
+                className="bg-slate-800 hover:bg-slate-900 dark:bg-slate-600 dark:hover:bg-slate-500 text-white px-6 py-2 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2"
+              >
+                <Database size={16} />
+                Hapus Pengumuman &gt; 30 Hari
+              </button>
+            </div>
+          </div>
+
+          {/* Card 3: Zona Berbahaya */}
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-red-200 dark:border-red-900/50 shadow-sm overflow-hidden flex flex-col">
+            <div className="p-4 md:p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg">
+                  <AlertTriangle className="w-5 h-5" />
+                </div>
+                <h3 className="text-lg font-semibold text-red-700 dark:text-red-400">Zona Berbahaya</h3>
+              </div>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 ml-[52px]">Tindakan di bawah ini bersifat permanen dan tidak dapat dibatalkan. Harap berhati-hati.</p>
+            </div>
+            <div className="bg-red-50 dark:bg-red-900/10 px-6 py-4 border-t border-red-200 dark:border-red-900/50 flex justify-start">
+              <button
+                onClick={() => {
+                  setConfirmConfig({
+                    isOpen: true,
+                    title: 'Hapus Seluruh Pengumuman',
+                    message: 'PERINGATAN: Anda akan menghapus SELURUH riwayat pengumuman di organisasi ini. Data yang dihapus tidak dapat dipulihkan. Lanjutkan?',
+                    confirmText: 'Ya, Hapus Semua',
+                    isDanger: true,
+                    onConfirm: async () => {
+                      try {
+                        const { error } = await supabase
+                          .from('memos')
+                          .delete()
+                          .eq('company_id', profile!.company_id);
+                        if (error) throw error;
+                        toast.success('Seluruh riwayat pengumuman berhasil dihapus!');
+                      } catch (err: any) {
+                        toast.error('Gagal menghapus: ' + err.message);
+                      }
+                      setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+                    }
+                  });
+                }}
+                className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2"
+              >
+                <AlertTriangle size={16} />
+                Hapus Seluruh Riwayat Pengumuman
+              </button>
+            </div>
+          </div>
+
         </div>
       ) : (
         <div className="flex-1 flex flex-col items-center justify-center text-slate-400 h-full p-4">
