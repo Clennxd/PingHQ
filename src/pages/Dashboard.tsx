@@ -12,6 +12,7 @@ export const Dashboard: React.FC = () => {
   const { memos, isLoading: isMemoLoading, error, fetchMemos, subscribeToMemos, unsubscribeMemos, unreadCount, resetUnreadCount } = useMemoStore();
   const [filter, setFilter] = useState<'ALL' | 'INFO' | 'URGENT'>('ALL');
   const [timeFilter, setTimeFilter] = useState('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const navigate = useNavigate();
 
@@ -97,6 +98,17 @@ export const Dashboard: React.FC = () => {
       thirtyDaysAgo.setDate(now.getDate() - 30);
       return memoDate >= thirtyDaysAgo;
     }
+    
+    // 3. Filter Pencarian (Search Query)
+    if (searchQuery.trim() !== '') {
+      const query = searchQuery.toLowerCase();
+      const matchMessage = m.message.toLowerCase().includes(query);
+      const matchSender = m.profiles?.full_name?.toLowerCase().includes(query) || false;
+      
+      // Jika pesan dan nama pengirim tidak mengandung kata kunci, sembunyikan memo ini
+      if (!matchMessage && !matchSender) return false;
+    }
+
     return true;
   });
 
@@ -117,6 +129,8 @@ export const Dashboard: React.FC = () => {
             <input 
               type="text" 
               placeholder="Cari pengumuman..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-64 pl-9 pr-4 py-1.5 bg-slate-100 dark:bg-slate-800 border-transparent rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white transition-all"
             />
           </div>
