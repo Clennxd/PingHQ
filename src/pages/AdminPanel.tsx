@@ -672,27 +672,31 @@ export const AdminPanel: React.FC = () => {
 
                     const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:D1');
                     const borderStyle = {
-                      top: { style: 'thin', color: { rgb: 'FFCCCCCC' } },
-                      bottom: { style: 'thin', color: { rgb: 'FFCCCCCC' } },
-                      left: { style: 'thin', color: { rgb: 'FFCCCCCC' } },
-                      right: { style: 'thin', color: { rgb: 'FFCCCCCC' } }
+                      top: { style: 'thin', color: { auto: 1 } },
+                      bottom: { style: 'thin', color: { auto: 1 } },
+                      left: { style: 'thin', color: { auto: 1 } },
+                      right: { style: 'thin', color: { auto: 1 } }
                     };
 
                     for (let R = range.s.r; R <= range.e.r; ++R) {
                       for (let C = range.s.c; C <= range.e.c; ++C) {
                         const address = XLSX.utils.encode_cell({ r: R, c: C });
-                        if (!worksheet[address]) continue;
+                        
+                        // PAKSA BUAT SEL JIKA KOSONG AGAR BORDER TETAP MUNCUL
+                        if (!worksheet[address]) {
+                          worksheet[address] = { t: 's', v: '' };
+                        }
 
                         if (R === 0) {
-                          // Style untuk Header (Baris 1)
+                          // Style Header
                           worksheet[address].s = {
                             font: { bold: true, color: { rgb: "FFFFFFFF" } },
-                            fill: { fgColor: { rgb: "FF4F46E5" } },
+                            fill: { fgColor: { rgb: "4F46E5" } },
                             alignment: { horizontal: "center", vertical: "center" },
                             border: borderStyle
                           };
                         } else {
-                          // Style untuk Data (Baris 2 dst)
+                          // Style Data
                           worksheet[address].s = {
                             alignment: { vertical: "center" },
                             border: borderStyle
@@ -738,27 +742,31 @@ export const AdminPanel: React.FC = () => {
 
                       const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:E1');
                       const borderStyle = {
-                        top: { style: 'thin', color: { rgb: 'FFCCCCCC' } },
-                        bottom: { style: 'thin', color: { rgb: 'FFCCCCCC' } },
-                        left: { style: 'thin', color: { rgb: 'FFCCCCCC' } },
-                        right: { style: 'thin', color: { rgb: 'FFCCCCCC' } }
+                        top: { style: 'thin', color: { auto: 1 } },
+                        bottom: { style: 'thin', color: { auto: 1 } },
+                        left: { style: 'thin', color: { auto: 1 } },
+                        right: { style: 'thin', color: { auto: 1 } }
                       };
 
                       for (let R = range.s.r; R <= range.e.r; ++R) {
                         for (let C = range.s.c; C <= range.e.c; ++C) {
                           const address = XLSX.utils.encode_cell({ r: R, c: C });
-                          if (!worksheet[address]) continue;
+                          
+                          // PAKSA BUAT SEL JIKA KOSONG AGAR BORDER TETAP MUNCUL
+                          if (!worksheet[address]) {
+                            worksheet[address] = { t: 's', v: '' };
+                          }
 
                           if (R === 0) {
-                            // Style untuk Header (Baris 1)
+                            // Style Header
                             worksheet[address].s = {
                               font: { bold: true, color: { rgb: "FFFFFFFF" } },
-                              fill: { fgColor: { rgb: "FF4F46E5" } },
+                              fill: { fgColor: { rgb: "4F46E5" } },
                               alignment: { horizontal: "center", vertical: "center" },
                               border: borderStyle
                             };
                           } else {
-                            // Style untuk Data (Baris 2 dst)
+                            // Style Data
                             worksheet[address].s = {
                               alignment: { vertical: "center" },
                               border: borderStyle

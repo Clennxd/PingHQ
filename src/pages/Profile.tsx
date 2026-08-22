@@ -108,18 +108,13 @@ export const Profile: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-8 px-4 text-slate-900 dark:text-slate-100">
-      <div className="max-w-3xl mx-auto">
-        
+    <div className="w-full max-w-4xl mx-auto p-4 md:p-8 pb-12 text-slate-900 dark:text-slate-100">
         {/* Header */}
-        <div className="flex items-center mb-8 gap-4 pt-2 md:pt-0">
-          <button 
-            onClick={() => navigate(-1)}
-            className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800"
-          >
-            <ArrowLeft className="w-5 h-5 text-slate-600 dark:text-slate-300" />
+        <div className="flex items-center gap-4 mb-8">
+          <button onClick={() => navigate(-1)} className="p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 transition-colors">
+            <ArrowLeft size={20} />
           </button>
-          <h1 className="text-2xl md:text-3xl font-bold">Profil Saya</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white">Profil Saya</h1>
         </div>
 
         <div className="space-y-6">
@@ -132,32 +127,48 @@ export const Profile: React.FC = () => {
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">User ID Login</label>
-                <div className="bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-md text-sm font-mono text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-700">
-                  {profile.user_id_login}
-                </div>
+                <input
+                  type="text"
+                  value={profile.user_id_login}
+                  disabled
+                  className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-500 dark:text-slate-400 cursor-not-allowed"
+                />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Perusahaan</label>
-                  <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-md border border-slate-100 dark:border-slate-700">
-                    <Building className="w-4 h-4 text-blue-400 shrink-0" />
-                    <span className="truncate">{profile.companies?.name || '-'}</span>
+                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Organisasi</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Building className="w-4 h-4 text-slate-400" />
+                    </div>
+                    <input
+                      type="text"
+                      value={profile.companies?.name || '-'}
+                      disabled
+                      className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-500 dark:text-slate-400 cursor-not-allowed"
+                    />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Departemen</label>
-                  <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-md border border-slate-100 dark:border-slate-700">
-                    <UsersIcon className="w-4 h-4 text-green-400 shrink-0" />
-                    <span className="truncate">{profile.departments?.name || 'Semua Departemen'}</span>
+                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Bagian</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <UsersIcon className="w-4 h-4 text-slate-400" />
+                    </div>
+                    <input
+                      type="text"
+                      value={profile.departments?.name || 'Tanpa Bagian'}
+                      disabled
+                      className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-500 dark:text-slate-400 cursor-not-allowed"
+                    />
                   </div>
                 </div>
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Role Akses</label>
-                <div className="flex items-center gap-2 text-sm mt-1">
-                  <Shield className={`w-4 h-4 ${profile.role === 'ADMIN' ? 'text-purple-500' : 'text-slate-400'}`} />
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${profile.role === 'ADMIN' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 border border-purple-200 dark:border-purple-800' : 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-300 dark:border-slate-700'}`}>
-                    {profile.role}
+                <div className="mt-1">
+                  <span className="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-full text-sm font-medium border border-slate-200 dark:border-slate-700">
+                    {profile.role.replace('_', ' ')}
                   </span>
                 </div>
               </div>
@@ -290,7 +301,6 @@ export const Profile: React.FC = () => {
           </div>
           
         </div>
-      </div>
       
       <ConfirmModal 
         {...confirmConfig} 

@@ -34,10 +34,10 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/join" element={<Join />} />
         
-        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/admin" element={<AdminPanel />} />
+          <Route path="/profile" element={<Profile />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
