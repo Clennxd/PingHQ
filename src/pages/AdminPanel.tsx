@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, Navigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { supabase } from '../lib/supabase';
-import { Building, Building2, Users, Plus, LayoutDashboard, Settings, ShieldCheck, Clock, RefreshCw, UserX } from 'lucide-react';
+import { Building, Building2, Users, Plus, LayoutDashboard, Settings, ShieldCheck, Clock, RefreshCw, UserX, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { CustomDropdown } from '../components/CustomDropdown';
 import { ConfirmModal } from '../components/ConfirmModal';
@@ -514,7 +514,10 @@ export const AdminPanel: React.FC = () => {
                         {emp.id === profile.id ? (
                           <div className="w-full sm:w-auto flex items-center gap-2 justify-center lg:justify-end">
                             <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">{emp.role?.replace('_', ' ')}</span>
-                            <span className="px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-lg text-xs md:text-sm font-medium border border-slate-200 dark:border-slate-700 text-center whitespace-nowrap">Paten (Milik Anda)</span>
+                            <div className="w-full sm:w-auto px-3 py-2 bg-slate-100 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 rounded-lg text-xs md:text-sm font-medium border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-1.5 cursor-not-allowed" title="Edit profil Anda melalui menu Profil">
+                              <Lock size={14} />
+                              <span>Akun Anda</span>
+                            </div>
                           </div>
                         ) : (
                           <>
