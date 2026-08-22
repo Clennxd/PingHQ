@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../store/authStore';
 import { useMemoStore } from '../store/memoStore';
 import { MemoCard } from '../components/MemoCard';
@@ -8,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 
 export const Dashboard: React.FC = () => {
   const { profile, logout, isLoading: isProfileLoading } = useAuthStore();
-  const { memos, isLoading: isMemoLoading, error, fetchMemos, subscribeToMemos, unsubscribeMemos } = useMemoStore();
+  const { memos, isLoading: isMemoLoading, error, fetchMemos, subscribeToMemos, unsubscribeMemos, unreadCount, resetUnreadCount } = useMemoStore();
   const [filter, setFilter] = useState<'ALL' | 'INFO' | 'URGENT'>('ALL');
   const [timeFilter, setTimeFilter] = useState('ALL');
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -25,6 +26,19 @@ export const Dashboard: React.FC = () => {
     setIsDarkMode(!isDarkMode);
     document.documentElement.classList.toggle('dark');
   };
+
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
+        setIsNotifOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (profile) {
@@ -89,7 +103,7 @@ export const Dashboard: React.FC = () => {
   return (
     <div className="flex flex-col w-full min-h-full">
       {/* Top Navbar */}
-      <div className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 md:px-6 lg:px-8 shrink-0 z-10 shadow-sm lg:shadow-none">
+      <div className="relative z-50 h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 md:px-6 lg:px-8 shrink-0 shadow-sm lg:shadow-none">
         <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
           <span className="hidden sm:inline">Dashboard</span>
           <span className="hidden sm:inline">&gt;</span>
@@ -109,10 +123,49 @@ export const Dashboard: React.FC = () => {
           <button onClick={toggleDarkMode} className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
             {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
           </button>
-          <button className="relative p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
-          </button>
+          <div className="relative" ref={notifRef}>
+            <button 
+              onClick={() => { setIsNotifOpen(!isNotifOpen); resetUnreadCount(); }} 
+              className="relative p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            >
+              <Bell className="w-5 h-5" />
+              {unreadCount > 0 && (
+                <span className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </button>
+            <AnimatePresence>
+              {isNotifOpen && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }} 
+                  animate={{ opacity: 1, y: 0, scale: 1 }} 
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }} 
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 z-[100] overflow-hidden"
+                >
+                  <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+                    <h3 className="font-semibold text-slate-800 dark:text-white">Notifikasi Terbaru</h3>
+                  </div>
+                  <div className="max-h-[300px] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/50">
+                    {memos.length === 0 ? (
+                      <div className="p-4 text-center text-sm text-slate-500">Belum ada notifikasi.</div>
+                    ) : (
+                      memos.slice(0, 5).map(memo => (
+                        <div key={memo.id} className="p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer" onClick={() => setIsNotifOpen(false)}>
+                          <div className="flex justify-between items-start mb-1">
+                            <span className="text-sm font-semibold text-slate-800 dark:text-white">{memo.profiles?.full_name}</span>
+                            <span className="text-[10px] text-slate-400">{new Date(memo.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</span>
+                          </div>
+                          <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2">{memo.message}</p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
           <div 
             className="lg:hidden w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center font-bold text-xs ml-1 sm:ml-2 cursor-pointer shadow-sm relative" 
             onClick={() => navigate('/profile')}

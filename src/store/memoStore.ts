@@ -25,13 +25,18 @@ interface MemoState {
   createMemo: (payload: { company_id: string, department_id: string | null, sender_id: string, message: string, type: string }) => Promise<{ success: boolean; error?: string }>;
   markMemoAsRead: (memoId: string, userId: string) => Promise<void>;
   getMemoReaders: (memoId: string) => Promise<any[]>;
+  unreadCount: number;
+  resetUnreadCount: () => void;
 }
 
 export const useMemoStore = create<MemoState>((set, get) => ({
   memos: [],
+  unreadCount: 0,
   isLoading: false,
   error: null,
   subscription: null,
+
+  resetUnreadCount: () => set({ unreadCount: 0 }),
 
   createMemo: async (payload) => {
     try {
@@ -139,7 +144,8 @@ export const useMemoStore = create<MemoState>((set, get) => ({
               
             if (memoDetails) {
               set((state) => ({
-                memos: [memoDetails as Memo, ...state.memos]
+                memos: [memoDetails as Memo, ...state.memos],
+                unreadCount: state.unreadCount + 1
               }));
             }
           }
